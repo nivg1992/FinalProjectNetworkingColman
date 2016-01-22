@@ -12,6 +12,8 @@ class Session {
 public:
 	Session();
 	virtual ~Session();
+	User* firstUser;
+	User* secoundUser;
 };
 
 #endif /* SESSION_H_ */

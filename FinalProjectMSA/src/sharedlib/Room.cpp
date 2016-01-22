@@ -7,12 +7,28 @@
 
 #include "Room.h"
 
-Room::Room() {
-	// TODO Auto-generated constructor stub
-
+Room::Room(string roomName) {
+	this->roomName=roomName;
 }
 
 Room::~Room() {
-	// TODO Auto-generated destructor stub
+
+}
+
+void Room::AddUserToRoom(User* uUser) {
+	arrUsers.push_back(uUser);
+}
+
+void Room::RemoveUserFromRoom(User* uUser) {
+	for(unsigned int i = 0 ; i<arrUsers.size();i++){
+			if(arrUsers.at(i)->username == uUser->username)
+			{
+				arrUsers.erase(arrUsers.begin()+i);
+			}
+		}
+}
+
+int Room::countUsersInRoot(){
+	return arrUsers.size();
 }
 
