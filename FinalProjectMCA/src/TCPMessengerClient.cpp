@@ -100,7 +100,7 @@ bool TCPMessengerClient::disconnect(){
 		this->sentIntToSocket(DISCONNECT);
 		system("sleep 1");
 		connected = false;
-		this->Udphandeler->UDPserverConnected = false;
+		this->Udphandeler->IsUdpServerConnected = false;
 		clientSocket->cclose();
 		this->clientStatus = NOT_CONNECTED;
 	}
@@ -382,14 +382,14 @@ void TCPMessengerClient::run()
 					clientSocket->recv((char*)&msgLength, 4);
 					msgLength = ntohl(msgLength);
 					clientSocket->recv(buffer, msgLength);
-					this->Udphandeler->Roomusers.clear();
+					this->Udphandeler->RoomUsers.clear();
 
 					tmpUser = strtok(buffer," ");
 					for(int i = 0; i < usersSize - 1; i++){
-						this->Udphandeler->Roomusers.push_back(tmpUser);
+						this->Udphandeler->RoomUsers.push_back(tmpUser);
 						tmpUser = strtok(NULL," ");
 					}
-					this->Udphandeler->Roomusers.push_back(tmpUser);
+					this->Udphandeler->RoomUsers.push_back(tmpUser);
 					break;
 				}
 			case NO_ROOMS:
@@ -437,7 +437,7 @@ void TCPMessengerClient::run()
 						}
 					system("sleep 1");
 					connected=false;
-					this->Udphandeler->UDPserverConnected=false;
+					this->Udphandeler->IsUdpServerConnected=false;
 					clientSocket->cclose();
 					this->clientStatus=NOT_CONNECTED;
 					cout<<"server is down, you are offline"<<endl;
