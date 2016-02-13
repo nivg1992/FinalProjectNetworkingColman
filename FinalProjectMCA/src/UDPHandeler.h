@@ -17,12 +17,12 @@ class UDPHandeler:public MThread {
 
 public:
 	UDPSocket* clientUDPSock;
-	string myUserName;
-	string destIp;
-	string destSERVER_PORT;
+	string userName;
+	string destinationIp;
+	string destinationServerPort;
 	string roomName;
-	vector<string> Roomusers;
-	bool UDPserverConnected;
+	vector<string> RoomUsers;
+	bool IsUdpServerConnected;
 
 	void sendToPeer(string msg);
 	UDPHandeler(string myUserName,string myIpandSERVER_PORT);

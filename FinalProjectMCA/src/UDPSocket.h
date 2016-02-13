@@ -26,8 +26,8 @@ private:
 public:
 	UDPSocket(int PORT = 9999);
 	int recv(char* buffer, int length);
-	int sendTo(string msg, string ip, int PORT);
-	int reply(string msg);
+	int sendTo(string message, string ip, int PORT);
+	int reply(string message);
 	void cclose();
 	string fromAddr();
 };

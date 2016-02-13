@@ -18,7 +18,7 @@ class TCPMessengerClient: public MThread{
 public:
 	bool connected;
 	bool socketConnected;
-	UDPHandeler* UDPhandeler;
+	UDPHandeler* Udphandeler;
 	string roomName;
 	string userSession;
 	string username;

@@ -35,117 +35,132 @@ int main(){
 	cout<<"Welcome to TCP messenger Client"<<endl;
 	printInstructions();
 	bool offline=false;
-	TCPMessengerClient* MC = new TCPMessengerClient();
+	TCPMessengerClient* Client = new TCPMessengerClient();
 	while(true){
-		string msg;
+		string message;
 		string command;
 		cin >> command;
+		//connect to server
 		if(command == "c")
-				{
-					string ip;
-					cin >> ip;
-					MC->connect(ip); //connect to server
-				}
-				else if(command == "login")
-				{
-					string user, password;
-					cin >> user;
-					cin >> password;
-					MC->login(user,password);//login to server
-				}
-				else if(command == "lu")
-				{
-					MC->listRegisteredUsers();//prints registered users
-				}
-				else if(command == "lr")
-				{
-					MC->listRooms();//prints rooms
-				}
-				else if(command == "i")
-				{
-					printInstructions();//display printInstructions
-				}
-				else if(command == "o")
-				{
-					string name;
-					cin >>name;
-					MC->openSession(name); //opens a session with user
-				}
-				else if(command == "or")
-				{
-					string name;
-					cin >>name;
-					MC->joinRoom(name); // opens a room
-				}
-				else if(command == "rg"){
-					string userName;
-					string password;
-					cin>>userName;
-					cin>>password;
-					MC->registration(userName,password); //register and login a new user
-				}
-				else if(command == "s") // sends a message
-				{
-						getline(std::cin,msg);
+		{
+			string ip;
+			cin >> ip;
+			Client->connect(ip);
+		}
+		else if(command == "login")
+		{
+			string user, password;
+			cin >> user;
+			cin >> password;
+			Client->login(user,password);
+		}
+		//prints registered users
+		else if(command == "lu")
+		{
+			Client->listRegisteredUsers();
+		}
+		//prints rooms
+		else if(command == "lr")
+		{
+			Client->listRooms();
+		}
+		else if(command == "i")
+		{
+			printInstructions();
+		}
+		//opens a session with user
+		else if(command == "o")
+		{
+			string name;
+			cin >>name;
+			Client->openSession(name);
+		}
+		// opens a room
+		else if(command == "or")
+		{
+			string name;
+			cin >>name;
+			Client->joinRoom(name);
+		}
+		//register and login a new user
+		else if(command == "rg"){
+			string userName;
+			string password;
+			cin>>userName;
+			cin>>password;
+			Client->registration(userName,password);
+		}
+		// send a message
+		else if(command == "s")
+		{
+			cin >> message;
 
-						if (MC->clientStatus!=IN_SESSION && MC->clientStatus!=IN_ROOM){
-							cout<<"No opened rooms or session - open one first"<<endl;
-							printInstructions();
-						}
-						else
-						{
-							MC->sendMessage(msg);
-						}
-				}
-				else if(command == "cs") // closes session or leave the room your in
-				{
-					if(MC->clientStatus==IN_SESSION)
-						MC->closeSession();
+			if (Client->clientStatus != IN_SESSION && Client->clientStatus != IN_ROOM){
+				cout<<"There are no rooms\session"<<endl;
+				printInstructions();
+			}
+			else
+			{
+				Client->sendMessage(message);
+			}
+		}
+		// close session or leave the room your in
+		else if(command == "cs")
+		{
+			if(Client->clientStatus==IN_SESSION)
+				Client->closeSession();
+			else if(Client->clientStatus==IN_ROOM)
+				Client->exitRoom();
+			else
+				cout<<"No open rooms or session."<<endl;
+		}
+		//create a room
+		else if(command == "cr")
+		{
+			string roomName;
+			cin>>roomName;
 
-					else if(MC->clientStatus==IN_ROOM)
-						MC->exitRoom();
-
-					else
-						cout<<"No open rooms or session."<<endl;
-
-
-				}
-				else if(command == "cr") //creates room
-				{
-					string inputRoomName;
-					cin>>inputRoomName;
-
-					if (MC->clientStatus == IN_SESSION || MC->clientStatus == IN_ROOM)
-					{
-						cout<<"Please close all Sessions/Rooms before creating a new one."<<endl;
-					}
-					else if(MC->clientStatus == NOT_CONNECTED)
-						cout<<"The Client is offline."<<endl;
-					else
-					{
-						MC->createRoom(inputRoomName);
-					}
-				}
-				else if(command == "lru"){//prints users in a room
-					string roomName;
-					cin>>roomName;
-					MC->printUsersInRoom(roomName);
-				}
-				else if(command == "lcu"){ //list connected users
-					MC->listConnectedUsers();
-				}else if(command == "d"){//disconnect from server
-					MC->disconnect();
-					offline=true;
-				}else if(command == "l"){//display current state
-					MC->printStatus();
-				}else if(command == "x"){//exit the client
-					MC->disconnect();
-					break;
-				}
-				else{
-					cout<<"wrong choice - Please choose again"<<endl;
-					printInstructions();
-				}
+			if (Client->clientStatus == IN_SESSION || Client->clientStatus == IN_ROOM)
+			{
+				cout<<"Close all Sessions/Rooms before creating a new one."<<endl;
+			}
+			else if(Client->clientStatus == NOT_CONNECTED)
+				cout<<"The Client is offline."<<endl;
+			else
+			{
+				Client->createRoom(roomName);
+			}
+		}
+		//prints users in a room
+		else if(command == "lru"){
+			string roomName;
+			cin>>roomName;
+			Client->printUsersInRoom(roomName);
+		}
+		//print list of connected users
+		else if(command == "lcu"){
+			Client->listConnectedUsers();
+		}
+		//disconnect from server
+		else if(command == "d")
+		{
+			Client->disconnect();
+			offline=true;
+		}
+		//print current state
+		else if(command == "l"){
+			Client->printStatus();
+		}
+		else if(command == "x")
+		{
+			Client->disconnect();
+			break;
+		}
+		else
+		{
+			cout<<"wrong choice - Please choose again"<<endl;
+			printInstructions();
+		}
 	}
 //	msngrServer.close();
 	cout<<"messenger was closed"<<endl;

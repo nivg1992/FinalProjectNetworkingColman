@@ -8,50 +8,52 @@
 #include "UDPHandeler.h"
 
 
-void UDPHandeler::sendToRoom(string msg)
-{
-	for(unsigned int i=0;i<this->Roomusers.size();i++)
-	{
-		string tempdest = Roomusers.at(i);
-		this->setDestinationMessage(tempdest);
-		this->sendToPeer(msg);
-	}
-}
+UDPHandeler::UDPHandeler(string userName,string myIpandSERVER_PORT) {
 
-UDPHandeler::UDPHandeler(string myUserName,string myIpandSERVER_PORT) {
-
-	this->myUserName = myUserName;
-	char* SERVER_PORT = strdup(myIpandSERVER_PORT.c_str());
-	string tempSERVER_PORT = strtok(SERVER_PORT,":");
+	this->userName = userName;
+	char* S_PORT = strdup(myIpandSERVER_PORT.c_str());
+	string tempSERVER_PORT = strtok(S_PORT,":");
 	tempSERVER_PORT = strtok(NULL,":");
 	clientUDPSock = new UDPSocket(atoi(tempSERVER_PORT.c_str()));
-	UDPserverConnected=true;
+	IsUdpServerConnected=true;
 
 }
-void UDPHandeler::setDestinationMessage(string dest)
-{
-		char* SERVER_PORT = strdup(dest.c_str());
-		destIp = strtok(SERVER_PORT,":");
-		destSERVER_PORT = strtok(NULL,":");
-}
-void UDPHandeler::sendToPeer(string msg)
-{
-	 string finalmsg = "["+myUserName+"]"+" " + msg;
-	 clientUDPSock->sendTo(finalmsg,destIp,atoi(destSERVER_PORT.c_str()));
-}
-UDPHandeler::~UDPHandeler() {
-}
-
 void UDPHandeler::run(){
 
 	char buffer [100];
 
-	while(UDPserverConnected)
+	while(IsUdpServerConnected)
 		{
 		  clientUDPSock->recv(buffer,sizeof(buffer));
-	    //print the msg
+		  //print the message
 		  cout<<buffer<<endl;
 		  bzero((char *) &buffer, sizeof(buffer));
 		}
 	clientUDPSock->cclose();
+}
+
+void UDPHandeler::sendToRoom(string msg)
+{
+	for(unsigned int i=0;i<this->RoomUsers.size();i++)
+	{
+		string tempdest = RoomUsers.at(i);
+		this->setDestinationMessage(tempdest);
+		this->sendToPeer(msg);
+	}
+}
+void UDPHandeler::setDestinationMessage(string dest)
+{
+		char* SERVER_PORT = strdup(dest.c_str());
+		destinationIp = strtok(SERVER_PORT,":");
+		destinationServerPort = strtok(NULL,":");
+}
+
+UDPHandeler::~UDPHandeler() {
+}
+
+
+void UDPHandeler::sendToPeer(string message)
+{
+	 string finalmessage = "["+userName+"]"+" " + message;
+	 clientUDPSock->sendTo(finalmessage, destinationIp, atoi(destinationServerPort.c_str()));
 }
