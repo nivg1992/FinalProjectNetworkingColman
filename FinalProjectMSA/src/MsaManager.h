@@ -4,17 +4,26 @@
  *  Created on: Jan 8, 2016
  *      Author: user
  */
+#ifndef MSAMANAGER_H_
+#define MSAMANAGER_H_
+
 #include <string>
-#include "sharedlib/Room.h"
+#include <map>
+#include <vector>
+
+#include <stdlib.h>
+#include <iostream>
+#include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "sharedlib/User.h"
+#include "sharedlib/Room.h"
 #include "sharedlib/Session.h"
 #include "MsaProtocol.h"
 
 using namespace std;
-
-#ifndef MSAMANAGER_H_
-#define MSAMANAGER_H_
-
 
 class MsaManager {
 	typedef map<string, User*> UserMap;

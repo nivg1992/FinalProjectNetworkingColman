@@ -6,8 +6,8 @@
 // Description :
 //============================================================================
 
-#include <iostream>
 #include "MsaManager.h"
+
 
 using namespace std;
 

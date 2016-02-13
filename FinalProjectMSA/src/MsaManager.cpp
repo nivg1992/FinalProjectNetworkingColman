@@ -6,6 +6,7 @@
  */
 
 #include "MsaManager.h"
+#include <cstring>
 
 MsaManager::MsaManager() {
 	dispatcher = new MsaTcpDispatcher(this);
