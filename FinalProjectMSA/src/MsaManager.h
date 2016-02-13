@@ -8,6 +8,7 @@
 #include "sharedlib/Room.h"
 #include "sharedlib/User.h"
 #include "sharedlib/Session.h"
+#include "MsaProtocol.h"
 
 using namespace std;
 
@@ -20,6 +21,9 @@ class MsaManager {
 	typedef map<string, Room*> RoomMap;
 
 public:
+	MsaTcpServer server;
+	MsaTcpDispatcher* dispatcher;
+
 	MsaManager();
 	virtual ~MsaManager();
 
