@@ -7,8 +7,11 @@
 
 #include "User.h"
 
-User::User() {
-	// TODO Auto-generated constructor stub
+User::User(string iUserName,string iPassword,TCPSocket* iSocket) {
+	this->username = iUserName;
+	this->password = iPassword;
+	this->socket = iSocket;
+	isLoggedIn = false;
 
 }
 

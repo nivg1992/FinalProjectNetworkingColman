@@ -14,13 +14,12 @@
 
 class User {
 public:
-	User();
+	User(string iUserName,string iPassword,TCPSocket* iSocket);
 	virtual ~User();
 	string username;
 	string password;
 	TCPSocket* socket;
 	bool isLoggedIn;
-	bool logIn(string username,string password);
 };
 
 #endif /* USER_H_ */
