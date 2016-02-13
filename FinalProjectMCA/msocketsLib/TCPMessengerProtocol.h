@@ -14,7 +14,7 @@
  * and optionally data follows in the format [Data length 4 byte int][ Data ]
  */
 // GENERAL
-#define SERVER_PORT 3333
+#define SERVER_PORT 				3346
 #define NONE						1
 #define PRINT_SERVER_DATA	     	2
 #define DISCONNECT                  3
