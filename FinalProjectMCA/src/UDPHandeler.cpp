@@ -1,8 +1,8 @@
 /*
- * RecieveMsgUDP.cpp
+ * UDPHandeler.cpp
  *
- *  Created on: Jun 5, 2013
- *      Author: user
+ *  Created on: Feb 8, 2016
+ *      Author: Michael Blitshtein
  */
 
 #include "UDPHandeler.h"
@@ -13,7 +13,7 @@ void UDPHandeler::sendToRoom(string msg)
 	for(unsigned int i=0;i<this->Roomusers.size();i++)
 	{
 		string tempdest = Roomusers.at(i);
-		this->setDestmessage(tempdest);
+		this->setDestinationMessage(tempdest);
 		this->sendToPeer(msg);
 	}
 }
@@ -28,12 +28,11 @@ UDPHandeler::UDPHandeler(string myUserName,string myIpandSERVER_PORT) {
 	UDPserverConnected=true;
 
 }
-void UDPHandeler::setDestmessage(string dest)
+void UDPHandeler::setDestinationMessage(string dest)
 {
 		char* SERVER_PORT = strdup(dest.c_str());
 		destIp = strtok(SERVER_PORT,":");
 		destSERVER_PORT = strtok(NULL,":");
-
 }
 void UDPHandeler::sendToPeer(string msg)
 {
@@ -52,7 +51,7 @@ void UDPHandeler::run(){
 		  clientUDPSock->recv(buffer,sizeof(buffer));
 	    //print the msg
 		  cout<<buffer<<endl;
-		  bzero((char *) &buffer, sizeof(buffer));  /* They say you must do this    */
+		  bzero((char *) &buffer, sizeof(buffer));
 		}
 	clientUDPSock->cclose();
 }

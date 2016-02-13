@@ -3,92 +3,92 @@
 #include "TCPMessengerProtocol.h"
 #include "UDPSocket.h"
 #include <string.h>
+#include <iostream>
 
 
-
-
-TCPMessengerClient::TCPMessengerClient(){//constractor
-	this->roomName="none";
-	this->username="none";
+TCPMessengerClient::TCPMessengerClient()
+{
+	this->roomName="";
+	this->username="";
 	this->clientStatus=NOT_CONNECTED;
 }
-bool TCPMessengerClient::connect(string ip)//connect to server
+bool TCPMessengerClient::connect(string ip)
 {
-
+	// Connect to server
 	if(this->clientStatus==NOT_CONNECTED)
 		{
-		    clientSocket = new TCPSocket(ip,SERVER_PORT);
-			this->start();
-			connected=true;
-			clientStatus = CONNECTED;
-			return true;
+		clientSocket = new TCPSocket(ip, SERVER_PORT);
+		this->start();
+		connected = true;
+		clientStatus = CONNECTED;
+		return true;
 		}
 	else
 		{
-			puts("Connection was open");
-			return false;
+		cout<<"Connection to the server already exists"<<endl;
+		return false;
 		}
 }
-bool TCPMessengerClient::login(string user,string password)//login to server
+bool TCPMessengerClient::login(string user,string password)
 {
-
-			string msg=user+" "+password;
-			if(connected==true)
-			{
-			this->sendString2Sock(msg,LOGIN_REQUEST);
-			username=user;
-			return true;
-			}
-			else {
-				puts("Failed - please connect to server first");
-				return false;
-			}
+	string msg = user + " " + password;
+	if(connected == true)
+	{
+	this->sendStringToSocket(msg, LOGIN_REQUEST);
+	username = user;
+	return true;
+	}
+	else
+	{
+	cout<<"Failed, need to connect to server first"<<endl;
+	return false;
+	}
 }
 
-bool TCPMessengerClient::registertion(string user,string password)//register new user
+bool TCPMessengerClient::registration(string user,string password)
 {
 
-	if(this->clientStatus==NOT_CONNECTED)
+	if(this->clientStatus == NOT_CONNECTED)
 		{
-		puts("Failed - please connect to server first");
+		cout<<"Failed, need to connect to server first"<<endl;
 		return false;
 		}
 	else
 		{
-		string commandToServer=user+" "+password;
-		connected=true;
-		username=user;
-		this->sendString2Sock(commandToServer,REGISTER_USER);
-		return true;
+			string commandToServer=user+" "+password;
+			connected = true;
+			username = user;
+			this->sendStringToSocket(commandToServer, REGISTER_USER);
+			return true;
 		}
 }
 
-bool TCPMessengerClient::isConnected(){//checks if connected
+bool TCPMessengerClient::isConnected(){
 		return connected;
 }
 
-bool TCPMessengerClient::disconnect(){//disconnect from server
-if(clientStatus!=NOT_CONNECTED)
-{
-	if(clientStatus==IN_ROOM)
+bool TCPMessengerClient::disconnect(){
+	if(clientStatus != NOT_CONNECTED)
 	{
-		this->exitRoom();
+		if(clientStatus == IN_ROOM)
+		{
+			this->exitRoom();
+		}
+		if(clientStatus == IN_SESSION)
+		{
+			this->closeSession();
+		}
+		this->sentIntToSocket(DISCONNECT);
+		system("sleep 1");
+		connected = false;
+		this->UDPhandeler->UDPserverConnected = false;
+		clientSocket->cclose();
+		this->clientStatus = NOT_CONNECTED;
 	}
-	if(clientStatus==IN_SESSION)
+	else
 	{
-		this->closeSession();
+		cout<<"Failed, need to connect to server first"<<endl;
 	}
-	this->sentInt2Sock(DISCONNECT);
-	system("sleep 1");
-	connected=false;
-	this->UDPhandeler->UDPserverConnected=false;
-	clientSocket->cclose();
-	this->clientStatus=NOT_CONNECTED;
-}
-else
-{
-	puts("Failed - please connect to server first");
-}
 }
 
 bool TCPMessengerClient::openSession(string username){
@@ -97,19 +97,19 @@ bool TCPMessengerClient::openSession(string username){
 	{
 	  if(clientStatus == FREE)
 	  {
-		  this->sendString2Sock(username,OPEN_SESSION);
+		  this->sendStringToSocket(username, OPEN_SESSION);
 		  return true;
 	  }
 	  else
 	  {
-		  puts("You have an open session - close it and try again");
+		  cout<<"There is an open session, close it and retry"<<endl;
 		  return false;
 	  }
 
 	}
 	else
 	{
-		puts("Failed - please connect to server first");
+		cout<<"Failed, need to connect to server first"<<endl;
 		return false;
 	}
 }
@@ -117,26 +117,25 @@ bool TCPMessengerClient::joinRoom(string roomName){
 
 	if(isConnected())
 	{
-	  if(clientStatus == FREE)
-	  {
-		  this->sendString2Sock(roomName,JOIN_ROOM);
+		if(clientStatus == FREE)
+		{
+		  this->sendStringToSocket(roomName, JOIN_ROOM);
 		  return true;
-	  }
-	  else
-	  {
-		  puts("You are in a room - close it and try again");
+		}
+		else
+		{
+		  cout<<"You are in a room, close it and retry"<<endl;
 		  return false;
-	  }
-
+		}
 	}
 	else
 	{
-		puts("Failed - please connect to server first");
-		return false;
+	cout<<"Failed, need to connect to server first"<<endl;
+	return false;
 	}
 }
 
-void TCPMessengerClient::run()//handles server commands
+void TCPMessengerClient::run()
 {
 	char* buffer =new char[2048];
 	while(connected)
@@ -144,127 +143,131 @@ void TCPMessengerClient::run()//handles server commands
 		int serverCommand;
 		clientSocket->recv((char*)&serverCommand,4);
 		bzero(buffer,1024);
+		// getting the command
 		serverCommand = ntohl(serverCommand);
 
 		switch(serverCommand)
 		{
-			case SESSION_ACCEPTED://new session accepted
+			case SESSION_ACCEPTED:
 								{
 									int msgSize;
+									string socketWith, socketAddress;
 									clientSocket->recv((char*)&msgSize,4);
 									msgSize = ntohl(msgSize);
 									clientSocket->recv(buffer, msgSize);
 									cout<<"session with "<<buffer<<endl;
-									string socketWith = strtok(buffer, " ");
-									string socketAddr = strtok(NULL, " ");
-									UDPhandeler->setDestmessage(socketAddr);
-									userSession =socketWith;
-									socketConnected= true;
-									clientStatus=IN_SESSION;
+									socketWith = strtok(buffer, " ");
+									socketAddress = strtok(NULL, " ");
+									UDPhandeler->setDestmessage(socketAddress);
+									userSession = socketWith;
+									socketConnected = true;
+									clientStatus = IN_SESSION;
 									break;
 								}
-			case SESSION_DENIED://session request denied
+			case SESSION_DENIED:
 								{
-									puts("failed to open session");
+									cout<<"failed to open session"<<endl;
 									break;
 								}
-			case OPEN_SESSION://new session
+			case OPEN_SESSION:
 								{
 
-									this->sentInt2Sock(clientStatus);
+									this->sentIntToSocket(clientStatus);
 									break;
 								}
-			case LOGIN_ERROR://login denied
+			case LOGIN_ERROR:
 									{
-										puts("Login error");
-										username="NoUser";
+										cout<<"Login error"<<endl;
+										username = "NoUser";
 										break;
 									}
-			case LOGIN_ACCEPTED://login accepted
+			case LOGIN_ACCEPTED:
 									{
 										int msgSize;
 										clientSocket->recv((char*)&msgSize,4);
 										msgSize = ntohl(msgSize);
 										clientSocket->recv(buffer, msgSize);
-										UDPhandeler = new UDPHandeler(username,buffer);
+										UDPhandeler = new UDPHandeler(username, buffer);
 										UDPhandeler->start();
 										clientStatus = FREE;
 										cout<<"You are connected as "<<username<<endl;
 										break;
 									}
 
-		case CLOSE_SESSION://close session
+		case CLOSE_SESSION:
 									{
-										puts("Session was disconnected");
+										cout<<"Session was disconnected"<<endl;
 										clientStatus = FREE;
-										socketConnected= false;
-										userSession="none";
+										socketConnected = false;
+										userSession = "";
 										break;
 									}
-			case ROOM_EXISTS://roomName already in use
+			case ROOM_EXISTS:
 									{
-										this->roomName="none";
-										puts("Room name is in use - please choose a new name");
+										this->roomName = "";
+										cout<<"Room name exists - choose a new name"<<endl;
 										break;
 									}
-			case ROOM_CREATED://create room accepted
+			case ROOM_CREATED:
 									{
-										this->clientStatus=IN_ROOM;
-										puts("Room is created");
+										this->clientStatus = IN_ROOM;
+										cout<<"Room is created"<<endl;
 										break;
 									}
-			case JOIN_ROOM_SUCCESSFUL://entering a room accepted
+			case JOIN_ROOM_SUCCESSFUL:
 									{
 										int msgSize;
 										clientSocket->recv((char*)&msgSize,4);
 										msgSize = ntohl(msgSize);
 										clientSocket->recv(buffer, msgSize);
 										cout<<"Welcome to room: "<<buffer<<endl;
-										this->clientStatus=IN_ROOM;
+										this->clientStatus = IN_ROOM;
 										this->roomName = buffer;
 										break;
 									}
-			case NO_SUCH_ROOM://roomName not found
+			case NO_SUCH_ROOM:
 									{
-										puts("No room with that name was found");
+										cout<<"No room found"<<endl;
 										break;
 									}
-			case ROOM_UPDATED://refreshing room users list
+			case ROOM_UPDATED:
 									{
-										int msgSize;
+										int msgSize, usersSize, msgLength;
+										string tmpUser;
+
 										clientSocket->recv((char*)&msgSize,4);
 										msgSize = ntohl(msgSize);
 										clientSocket->recv(buffer, msgSize);
 										cout<<buffer<<endl;
-										int usersSize;
-										clientSocket->recv((char*)&usersSize,4);
+
+										clientSocket->recv((char*)&usersSize, 4);
 										usersSize = ntohl(usersSize);
-										bzero(buffer,1024);
-										int msgLen;
-										clientSocket->recv((char*)&msgLen,4);
-										msgLen = ntohl(msgLen);
-									    clientSocket->recv(buffer, msgLen);
+										bzero(buffer, 1024);
+
+										clientSocket->recv((char*)&msgLength, 4);
+										msgLength = ntohl(msgLength);
+									    clientSocket->recv(buffer, msgLength);
 									    this->UDPhandeler->Roomusers.clear();
-									    string tmpUser;
+
 									    tmpUser = strtok(buffer," ");
-									    for(int i =0; i<usersSize-1;i++){
+									    for(int i = 0; i < usersSize - 1; i++){
 									    	this->UDPhandeler->Roomusers.push_back(tmpUser);
-									    	tmpUser=strtok(NULL," ");
+									    	tmpUser = strtok(NULL," ");
 									    }
 									    this->UDPhandeler->Roomusers.push_back(tmpUser);
 										break;
 									}
-			case NO_ROOMS://no open rooms
+			case NO_ROOMS:
 									{
 										cout<<"No open rooms yet"<<endl;
 										break;
 									}
-			case EXIT_ROOM://exit a room
+			case EXIT_ROOM:
 									{
-										puts("You have left the room");
+										cout<<"You have left the room"<<endl;
 										break;
 									}
-			case PRINT_SERVER_DATA://print
+			case PRINT_SERVER_DATA:
 									{
 										int NI;
 									    clientSocket->recv((char*)&NI,4);
@@ -278,17 +281,17 @@ void TCPMessengerClient::run()//handles server commands
 									}
 			case REGISTRATION_SUCCESSFUL://registration approved
 									{
-										puts("New user created");
+										cout<<"New user created"<<endl;
 										break;
 									}
 			case REGISTRATION_FAILED://registration denied
 									{
-										puts(" failed - User name already exist");
+										cout<<" failed - User name already exist"<<endl;
 										break;
 									}
 			case SERVER_CLOSED://server down
 									{
-										puts("server DOWN!!!! you are now offline!!");
+										cout<<"server DOWN!!!! you are now offline!!"<<endl;
 											if(clientStatus==IN_ROOM)
 											{
 												this->exitRoom();
@@ -308,12 +311,12 @@ void TCPMessengerClient::run()//handles server commands
 	}
 }
 
-void TCPMessengerClient::print(string data, int NI){//print
+void TCPMessengerClient::print(string data, int NI){
 
 	char* tmp = strdup(data.c_str());
 	int i;
     string text = strtok(tmp," ");
-	for(i =0; i<NI-1;i++){
+	for(i =0; i<NI-1; i++){
 		cout<<text<<endl;
 		text=strtok(NULL," ");
 	}
@@ -324,35 +327,33 @@ void TCPMessengerClient::print(string data, int NI){//print
 
 void TCPMessengerClient::listRooms(){
 
-		this->sentInt2Sock(GET_ROOMS);
+		this->sentIntToSocket(GET_ROOMS);
 }
 
 void TCPMessengerClient::printUsersInRoom(string roomName){
 	if(this->clientStatus == NOT_CONNECTED or this->clientStatus == CONNECTED)
 			cout<<"You must be logged in"<<endl;
 	else
-		this->sendString2Sock(roomName,GET_ROOM_USERS);
-
-
+		this->sendStringToSocket(roomName, GET_ROOM_USERS);
 }
 
 bool TCPMessengerClient::closeSession(){
 	if(isConnected())
+	{
+		if(this->clientStatus == IN_SESSION)
 		{
-		if(this->clientStatus==IN_SESSION)
-		{
-		this->sentInt2Sock(CLOSE_SESSION);
-		clientStatus= FREE;
-		socketConnected= false;
-		userSession="none";
-		puts("you have been disconnected from your current session");
-		return true;
+			this->sentIntToSocket(CLOSE_SESSION);
+			cout<<"Disconnected from session"<<endl;
+			clientStatus = FREE;
+			socketConnected = false;
+			userSession = "";
+			return true;
 		}
 		else
 		{
-			puts("you're not in a session");
+			cout<<"you're not in a session"<<endl;
 		}
-		}
+	}
 
 	return false;
 }
@@ -372,74 +373,71 @@ bool TCPMessengerClient::sendMessage(string msg){
 		UDPhandeler->sendToRoom(msg);
 		return true;
 	}
-
 	return false;
-
 }
 
-void TCPMessengerClient::sentInt2Sock(int protocol)
+void TCPMessengerClient::sentIntToSocket(int protocol)
 {
 	int command = htonl(protocol);
-	clientSocket->send((char*)&command,4);
-
+	clientSocket->send((char*)&command, 4);
 }
-void TCPMessengerClient::sendString2Sock(string msg,int protocol){
-	if(protocol!=DONT_SEND_COMMAND)
-	   this->sentInt2Sock(protocol);
+void TCPMessengerClient::sendStringToSocket(string msg,int protocol){
+	if(protocol != NONE)
+	   this->sentIntToSocket(protocol);
 
-	int msglen=htonl(msg.length());
-	clientSocket->send((char*)&msglen,4);
-	clientSocket->send(msg.c_str(),(msg.length()));
+	int msglen = htonl(msg.length());
+	clientSocket->send((char*)&msglen, 4);
+	clientSocket->send(msg.c_str(), (msg.length()));
 }
 
 void TCPMessengerClient::createRoom(string roomName)
 {
 
-	this->sendString2Sock(roomName,CREATE_ROOM);
-	this->roomName= roomName;
+	this->sendStringToSocket(roomName, CREATE_ROOM);
+	this->roomName = roomName;
 
 }
 void TCPMessengerClient::exitRoom()
 {
-	if(clientStatus==IN_ROOM)
+	if(clientStatus == IN_ROOM)
 	{
-		this->sendString2Sock(this->roomName,LEAVE_ROOM);
-		this->clientStatus=FREE;
-		this->roomName="none";
+		this->sendStringToSocket(this->roomName, LEAVE_ROOM);
+		this->clientStatus = FREE;
+		this->roomName = "";
 	}
 	else
-		puts("your not in a room");
+		cout<<"you are not in a room"<<endl;
 }
 
 void  TCPMessengerClient::printStatus(){
-	if(this->clientStatus==FREE){
-		cout<<"connected to server as: "<<this->username<<endl;
+	if(this->clientStatus == FREE){
+		cout<<"Connected as - "<<this->username<<endl;
 	}
-	else if(this->clientStatus==IN_ROOM){
-		cout<<"you are in room "<<this->roomName<<endl;
+	else if(this->clientStatus == IN_ROOM){
+		cout<<"Entered room - "<<this->roomName<<endl;
 	}
-	else if(this->clientStatus==IN_SESSION){
-		cout<<"you are in session with: "<<userSession<<endl;
+	else if(this->clientStatus == IN_SESSION){
+		cout<<"In session with: "<<userSession<<endl;
 	}
 	else
-		cout<<"you are not logged in"<<endl;
+		cout<<"You are not logged in"<<endl;
 }
 
 
 void TCPMessengerClient::listConnectedUsers()
 {
-	if(this->clientStatus == NOT_CONNECTED or this->clientStatus == CONNECTED) //print all connected users ONLY when connected
+	if(this->clientStatus == NOT_CONNECTED || this->clientStatus == CONNECTED) //print all connected users ONLY when connected
 		cout<<"You are not logged in"<<endl;
 	else
-		this->sentInt2Sock(GET_CONNECTED_USERS);
+		this->sentIntToSocket(GET_CONNECTED_USERS);
 
 }
 
 void TCPMessengerClient::listRegisteredUsers(){
-	if(this->clientStatus == NOT_CONNECTED or this->clientStatus == CONNECTED) //print all users ONLY when connected
+	if(this->clientStatus == NOT_CONNECTED || this->clientStatus == CONNECTED) //print all users ONLY when connected
 		cout<<"You are not logged in"<<endl;
 	else
 	{
-		this->sentInt2Sock(GET_ALL_USERS);
+		this->sentIntToSocket(GET_ALL_USERS);
 	}
 }

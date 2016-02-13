@@ -1,8 +1,8 @@
 /*
- * RecieveMsgUDP.h
+ * UDPHandeler.h
  *
- *  Created on: Jun 5, 2013
- *      Author: user
+ *  Created on: Feb 8, 2016
+ *      Author: Michael Blitshtein
  */
 
 #ifndef UDPHANDELER_H_
@@ -26,7 +26,7 @@ public:
 
 	void sendToPeer(string msg);
 	UDPHandeler(string myUserName,string myIpandSERVER_PORT);
-	void setDestmessage(string dest);
+	void setDestinationMessage(string dest);
 	void sendToRoom(string msg);
 	void PrintUsersInRoom();
 	virtual ~UDPHandeler();

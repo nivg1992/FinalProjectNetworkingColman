@@ -1,8 +1,8 @@
 /*
  * UDPSocket.h
  *
- *  Created on: Feb 6, 2013
- *      Author: Eliav Menachi
+ *  Created on: Feb 8, 2016
+ *      Author: Michael Blitshtein
  */
 
 #ifndef UDPSOCKET_H_
@@ -24,9 +24,9 @@ private:
 	int socket_fd;
 
 public:
-	UDPSocket(int SERVER_PORT = 9999);
+	UDPSocket(int PORT = 9999);
 	int recv(char* buffer, int length);
-	int sendTo(string msg, string ip, int SERVER_PORT);
+	int sendTo(string msg, string ip, int PORT);
 	int reply(string msg);
 	void cclose();
 	string fromAddr();

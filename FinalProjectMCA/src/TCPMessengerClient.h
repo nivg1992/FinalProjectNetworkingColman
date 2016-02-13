@@ -24,27 +24,46 @@ public:
 	string username;
 	int clientStatus;
 
-	void run();//handle server response
-	TCPMessengerClient(); //constractor
-	bool connect(string ip);//connect to server
-	bool login(string user,string password);//login to server
-	void sendString2Sock(string msg,int protocol);//send string to server
-	bool registertion(string user,string password);//register to server
-	bool isConnected();//check if connected
-	bool disconnect();//disconnect from server
-	bool openSession(string username);//open a session
-	bool joinRoom(string roomName);//open a room
-	bool closeSession();//close session
-	bool sendMessage(string msg);//send message
-	void sentInt2Sock(int command);//send int to server
-	void createRoom(string roomName);//creates a new room
-	void exitRoom();//exit the current room
-	void printStatus();//prints client status
-	void print(string data, int NI);//print data
-	void printUsersInRoom(string roomName);//prints users in room
-	void listRooms();//print all rooms
-	void listConnectedUsers();//prints connected users
-	void listRegisteredUsers();//prints registered users
-
+	TCPMessengerClient();
+	//connect to server
+	bool connect(string ip);
+	//login to server
+	bool login(string user,string password);
+	//register to server
+	bool registration(string user,string password);
+	//check if connected
+	bool isConnected();
+	//disconnect from server
+	bool disconnect();
+	//open a session
+	bool openSession(string username);
+	//open a room
+	bool joinRoom(string roomName);
+	//handle server response
+	void run();
+	//print data
+	void print(string data, int NI);
+	//print all rooms
+	void listRooms();
+	//prints users in room
+	void printUsersInRoom(string roomName);
+	//close session
+	bool closeSession();
+	//send message
+	bool sendMessage(string msg);
+	//send int to server
+	void sentIntToSocket(int command);
+	//send string to server
+	void sendStringToSocket(string msg,int protocol);
+	//creates a new room
+	void createRoom(string roomName);
+	//exit the current room
+	void exitRoom();
+	//prints client status
+	void printStatus();
+	//prints connected users
+	void listConnectedUsers();
+	//prints registered users
+	void listRegisteredUsers();
 };
 
