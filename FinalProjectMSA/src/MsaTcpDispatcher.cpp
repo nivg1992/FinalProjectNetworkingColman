@@ -101,6 +101,9 @@ void MsaTcpDispatcher::processReadyPeer(TCPSocket* peer)
 			if(currUser->roomName != "") {
 				_Manager->roomNameToRoom.erase(currUser->roomName);
 			}
+			this->_Manager->usernameToUser.erase(currUser->username);
+			this->_Manager->addressToUser.erase(currUser->socket->destIpAndPort());
+
 			break;
 		default:
 			break;
