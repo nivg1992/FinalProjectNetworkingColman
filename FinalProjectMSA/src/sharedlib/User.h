@@ -20,6 +20,8 @@ public:
 	string password;
 	TCPSocket* socket;
 	bool isLoggedIn;
+	string roomName;
+	string sessionWithUserName;
 };
 
 #endif /* USER_H_ */

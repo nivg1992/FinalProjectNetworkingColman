@@ -20,9 +20,11 @@ public:
 	Room(string roomName);
 	virtual ~Room();
 	vector<User*> arrUsers;
+	User* roomOwner;
 	void AddUserToRoom(User* uUser);
 	void RemoveUserFromRoom(User* uUser);
 	int countUsersInRoot();
+	void UpdateRoomUsers(User* updateUser,int Command);
 };
 
 #endif /* ROOM_H_ */

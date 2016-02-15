@@ -32,3 +32,6 @@ int Room::countUsersInRoot(){
 	return arrUsers.size();
 }
 
+void Room::UpdateRoomUsers(User* updateUser,int Command) {
+
+}

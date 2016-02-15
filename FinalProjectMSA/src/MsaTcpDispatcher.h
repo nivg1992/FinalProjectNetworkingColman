@@ -25,34 +25,46 @@
 #define MSATCPDISPATCHER_H_
 
 class MsaTcpDispatcher  : public MThread{
-	typedef map<string, User*> UserMap;
-	typedef map<string, Room*> RoomMap;
-
 private:
 	MultipleTCPSocketsListener* mtsl = new MultipleTCPSocketsListener();
 	void processReadyPeer(TCPSocket* peer);
+	MsaManager* _Manager;
 
 public:
-	MsaTcpDispatcher();
+	MsaTcpDispatcher(MsaManager* Manager);
 	virtual ~MsaTcpDispatcher();
+
+	// MThread
 	void addPeer(TCPSocket* peer);
 	TCPSocket* selectSocketReceive();
 	void run();
+
+	// Login and register
 	void login(TCPSocket* uUser);
 	bool registerUser(TCPSocket* tmpPeer);
-	User* GetUser(TCPSocket* peer);
-	vector<string> getUsersFromFile();
 	void connect(User* tmpPeer);
 
-	static int readCommandFromPeer(TCPSocket* peer);
-	static string readDataFromPeer(TCPSocket* peer);
-	static void sendCommandToPeer(TCPSocket* peer, int command);
-	static void sendDataToPeer(TCPSocket* peer, string msg);
+	void openSession(User* tmpPeer);
+	void closeSession(User* tmpPeer);
 
-	UserMap addressToUser;
-	UserMap usernameToUser;
-	RoomMap roomNameToRoom;
-	vector<Session*> arrSessions;
+	void createRoom(User* tmpPeer);
+	void enterRoom(User* tmpPeer);
+	void exitRoom(User* tmpPeer);
+
+	vector<User*> getConnectedUsers();
+	vector<User*> getAllUsers();
+	vector<Room*> getAllRooms();
+	vector<User*> getAllUsersInRoom(string name);
+	string prepareToSendUsers(vector<User*> uUsers);
+	string prepareToSendRooms(vector<Room*> rRooms);
+
+	// Get User
+	User* GetUser(TCPSocket* peer);
+	vector<string> getUsersFromFile();
+
+
+
+
 };
 
 #endif /* MSATCPDISPATCHER_H_ */
