@@ -4,12 +4,21 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/TCPMessengerClient.cpp \
+../src/UDPHandeler.cpp \
+../src/UDPSocket.cpp \
 ../src/main.cpp 
 
 OBJS += \
+./src/TCPMessengerClient.o \
+./src/UDPHandeler.o \
+./src/UDPSocket.o \
 ./src/main.o 
 
 CPP_DEPS += \
+./src/TCPMessengerClient.d \
+./src/UDPHandeler.d \
+./src/UDPSocket.d \
 ./src/main.d 
 
 

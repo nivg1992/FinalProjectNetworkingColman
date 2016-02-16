@@ -4,6 +4,7 @@
  *  Created on: Jan 8, 2016
  *      Author: user
  */
+
 #ifndef MSATCPDISPATCHER_H_
 #define MSATCPDISPATCHER_H_
 
@@ -25,10 +26,13 @@
 #include "sharedlib/Room.h"
 #include "sharedlib/Session.h"
 
-#include "MsaManager.h"
+#include "MsaUtility.h"
 #include "MsaProtocol.h"
+#include "MsaManager.h"
 
 using namespace std;
+
+class MsaManager;
 
 class MsaTcpDispatcher  : public MThread{
 private:
@@ -50,9 +54,11 @@ public:
 	bool registerUser(TCPSocket* tmpPeer);
 	void connect(User* tmpPeer);
 
+	// Session
 	void openSession(User* tmpPeer);
 	void closeSession(User* tmpPeer);
 
+	// Room
 	void createRoom(User* tmpPeer);
 	void enterRoom(User* tmpPeer);
 	void exitRoom(User* tmpPeer);

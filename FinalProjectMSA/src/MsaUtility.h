@@ -1,3 +1,6 @@
+#ifndef MSAUTILITY_H_
+#define MSAUTILITY_H_
+
 #include <string>
 #include <cstring>
 #include "TCPSocket.h"
@@ -42,3 +45,5 @@ struct MsaUtility {
 		peer->send(msg.data(), msg.length());
 	}
 };
+
+#endif

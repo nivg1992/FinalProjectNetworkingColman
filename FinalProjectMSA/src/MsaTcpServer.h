@@ -11,6 +11,8 @@
 #include "TCPSocket.h"
 #include "MsaTcpDispatcher.h"
 
+class MsaTcpDispatcher;
+
 class MsaTcpServer  :  public MThread {
 private:
 	TCPSocket* _serverSock;

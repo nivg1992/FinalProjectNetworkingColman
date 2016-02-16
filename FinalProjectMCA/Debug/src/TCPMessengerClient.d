@@ -1,11 +1,9 @@
-src/main.d: ../src/main.cpp \
- /home/user/Desktop/FinalProject/FinalProjectMCA/msocketsLib/TCPMessengerProtocol.h \
+src/TCPMessengerClient.d: ../src/TCPMessengerClient.cpp \
  ../src/TCPMessengerClient.h \
  /home/user/Desktop/FinalProject/FinalProjectMCA/msocketsLib/MThread.h \
  /home/user/Desktop/FinalProject/FinalProjectMCA/msocketsLib/TCPSocket.h \
- ../src/UDPHandeler.h ../src/UDPSocket.h
-
-/home/user/Desktop/FinalProject/FinalProjectMCA/msocketsLib/TCPMessengerProtocol.h:
+ ../src/UDPHandeler.h ../src/UDPSocket.h \
+ /home/user/Desktop/FinalProject/FinalProjectMCA/msocketsLib/TCPMessengerProtocol.h
 
 ../src/TCPMessengerClient.h:
 
@@ -16,3 +14,5 @@ src/main.d: ../src/main.cpp \
 ../src/UDPHandeler.h:
 
 ../src/UDPSocket.h:
+
+/home/user/Desktop/FinalProject/FinalProjectMCA/msocketsLib/TCPMessengerProtocol.h:

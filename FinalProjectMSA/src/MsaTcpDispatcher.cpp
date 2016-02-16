@@ -155,9 +155,10 @@ vector<Session*> MsaTcpDispatcher::getAllSessions(){
 
 vector<Room*> MsaTcpDispatcher::getAllRooms(){
 	vector<Room*> Rooms;
-
-	for (std::map<string,Room*>::iterator it = _Manager->roomNameToRoom.begin();it != _Manager->roomNameToRoom.end();it++) {
-		Rooms.push_back(it->second);
+	if(_Manager->roomNameToRoom.size() > 0) {
+		for (std::map<string,Room*>::iterator it = _Manager->roomNameToRoom.begin();it != _Manager->roomNameToRoom.end();it++) {
+			Rooms.push_back(it->second);
+		}
 	}
 
 	return Rooms;

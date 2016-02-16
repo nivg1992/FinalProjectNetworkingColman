@@ -4,6 +4,7 @@
  *  Created on: Jan 8, 2016
  *      Author: user
  */
+
 #ifndef MSAMANAGER_H_
 #define MSAMANAGER_H_
 
@@ -21,17 +22,22 @@
 #include "sharedlib/User.h"
 #include "sharedlib/Room.h"
 #include "sharedlib/Session.h"
+
+#include "MsaTcpServer.h"
 #include "MsaProtocol.h"
+#include "MsaTcpDispatcher.h"
+
+class MsaTcpDispatcher;
+class MsaTcpServer;
 
 using namespace std;
-
 
 class MsaManager {
 	typedef map<string, User*> UserMap;
 	typedef map<string, Room*> RoomMap;
 
 public:
-	MsaTcpServer server;
+	MsaTcpServer* server;
 	MsaTcpDispatcher* dispatcher;
 
 	MsaManager();

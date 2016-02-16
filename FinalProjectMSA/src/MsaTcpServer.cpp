@@ -10,6 +10,8 @@
 MsaTcpServer::MsaTcpServer(int port, MsaTcpDispatcher* dispatcher) {
 	_serverSock = new TCPSocket(port);
 	_dispatcher = dispatcher;
+
+
 }
 
 MsaTcpServer::~MsaTcpServer() {
@@ -18,6 +20,8 @@ MsaTcpServer::~MsaTcpServer() {
 
 void MsaTcpServer::run()
 {
+	_dispatcher->start();
+
 	while(true)
 	{
 		TCPSocket* newPeer = _serverSock->listenAndAccept();

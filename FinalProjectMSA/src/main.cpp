@@ -8,7 +8,6 @@
 
 #include "MsaManager.h"
 
-
 using namespace std;
 
 void printInstructions(){
@@ -51,6 +50,7 @@ int main(){
 		}
 		else if (command == "lru")
 		{
+			cin >> msg;
 			serverManagerInstance.printUsersByRoom(msg);
 		}
 		else if (command == "x")
