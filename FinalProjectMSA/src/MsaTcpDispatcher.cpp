@@ -6,28 +6,14 @@
  */
 
 #include "MsaTcpDispatcher.h"
+#include <cstring>
 
 MsaTcpDispatcher::MsaTcpDispatcher(MsaManager* Manager) {
 	this->_Manager = Manager;
 }
 
 MsaTcpDispatcher::~MsaTcpDispatcher() {
-}
-
-void MsaTcpDispatcher::run()
-{
-	//loop
-	while(true)
-	{
-		//listen to all peers
-		TCPSocket* peer = this->selectSocketReceive();
-
-		if (peer != NULL)
-		{
-			//process ready peer
-			this->processReadyPeer(peer);
-		}
-	}
+	delete mtsl;
 }
 
 void MsaTcpDispatcher::processReadyPeer(TCPSocket* peer)
@@ -76,8 +62,15 @@ void MsaTcpDispatcher::processReadyPeer(TCPSocket* peer)
 		case GET_ROOM_USERS:
 			if(currUser != NULL){
 				string roomNameFromClient = MsaManager::readDataFromPeer(peer);
-				MsaManager::sendCommandToPeer(peer,PRINT_SERVER_DATA);
-				MsaManager::sendDataToPeer(peer,prepareToSendUsers(getAllUsersInRoom(roomNameFromClient)));
+
+				vector<Room*> rooms = getAllUsersInRoom(roomNameFromClient);
+
+				if(rooms == NULL) {
+					MsaManager::sendCommandToPeer(peer,NO_ROOMS);
+				} else {
+					MsaManager::sendCommandToPeer(peer,PRINT_SERVER_DATA);
+					MsaManager::sendDataToPeer(peer,prepareToSendRooms(rooms));
+				}
 			}
 			break;
 		case GET_ROOMS:
@@ -101,12 +94,80 @@ void MsaTcpDispatcher::processReadyPeer(TCPSocket* peer)
 			break;
 	}
 }
-string MsaTcpDispatcher::prepareToSendRooms(vector<Room*> rRooms) {return NULL;}
-string MsaTcpDispatcher::prepareToSendUsers(vector<User*> uUsers) {return NULL;}
-vector<User*> MsaTcpDispatcher::getConnectedUsers(){return NULL;}
-vector<User*> MsaTcpDispatcher::getAllUsers(){return NULL;}
-vector<Room*> MsaTcpDispatcher::getAllRooms(){return NULL;}
-vector<User*> MsaTcpDispatcher::getAllUsersInRoom(string name){return NULL;}
+string MsaTcpDispatcher::prepareToSendRooms(vector<Room*> rRooms) {
+	string strRooms;
+
+	for(int i=0;i < rRooms.size();i++) {
+		strRooms.append(rRooms.at(i)->roomName);
+		if(i!=rRooms.size()-1){
+			strRooms.append(" ");
+		}
+	}
+
+	return strRooms;
+}
+string MsaTcpDispatcher::prepareToSendUsers(vector<User*> uUsers) {
+	string strUsers;
+
+	for(int i=0;i < uUsers.size();i++) {
+		strUsers.append(uUsers.at(i)->username);
+		if(i!=uUsers.size()-1){
+			strUsers.append(" ");
+		}
+	}
+
+	return strUsers;
+}
+
+vector<User*> MsaTcpDispatcher::getConnectedUsers(){
+	vector<User*> Users;
+
+	for (std::map<string,User*>::iterator it = _Manager->addressToUser.begin();it != _Manager->addressToUser.end();it++) {
+		Users.push_back(it->second);
+	}
+
+	return Users;
+}
+
+vector<User*> MsaTcpDispatcher::getAllUsers(){
+	vector<string> usersVec = getUsersFromFile();
+	int numUsers = usersVec.size();
+	vector<User*> Users;
+	for(int i = 0; i <numUsers;i++)
+	{
+		string currUser=usersVec.at(i);
+		// parse user name from file
+		currUser=currUser.substr(0, currUser.find("#"));
+		User* user = new User(currUser);
+		Users.push_back(user);
+	}
+
+	return Users;
+}
+
+vector<Session*> MsaTcpDispatcher::getAllSessions(){
+	return _Manager->arrSessions;
+}
+
+vector<Room*> MsaTcpDispatcher::getAllRooms(){
+	vector<Room*> Rooms;
+
+	for (std::map<string,Room*>::iterator it = _Manager->roomNameToRoom.begin();it != _Manager->roomNameToRoom.end();it++) {
+		Rooms.push_back(it->second);
+	}
+
+	return Rooms;
+}
+
+vector<User*> MsaTcpDispatcher::getAllUsersInRoom(string name){
+	Room* room = _Manager->roomNameToRoom.find(name);
+	if(room != _Manager->roomNameToRoom.end()) {
+		return room->arrUsers;
+	}
+	else {
+		return NULL;
+	}
+}
 
 void MsaTcpDispatcher::openSession(User* tmpPeer) {
 	string secendUserName =  MsaManager::readDataFromPeer(tmpPeer->socket);
@@ -125,9 +186,7 @@ void MsaTcpDispatcher::openSession(User* tmpPeer) {
 				MsaManager::sendCommandToPeer(secendUser->socket,SESSION_ACCEPTED);
 				MsaManager::sendDataToPeer(secendUser->socket,tmpPeer->username + " " + tmpPeer->socket->destIpAndPort());
 
-				Session* newSession = new Session();
-				newSession->firstUser = tmpPeer;
-				newSession->secoundUser = secendUser;
+				Session* newSession = new Session(tmpPeer,secendUser);
 				_Manager->arrSessions.push_back(newSession);
 			} else {
 				MsaManager::sendCommandToPeer(tmpPeer->socket,SESSION_DENIED);
@@ -143,7 +202,18 @@ void MsaTcpDispatcher::openSession(User* tmpPeer) {
 }
 
 void MsaTcpDispatcher::closeSession(User* tmpPeer) {
-
+	for(int i=0;i<_Manager->arrSessions.size();i++)
+	{
+		if(_Manager->arrSessions.at(i) == tmpPeer->socket->destIpAndPort())
+		{
+			User* firstUser = _Manager->arrSessions.at(i)->firstUser;
+			User* secoundUser = _Manager->arrSessions.at(i)->secoundUser;
+			MsaManager::sendCommandToPeer(firstUser->socket,CLOSE_SESSION);
+			MsaManager::sendCommandToPeer(secoundUser->socket,CLOSE_SESSION);
+			_Manager->arrSessions.erase(_Manager->arrSessions.begin()+i);
+			return;
+		}
+	}
 }
 
 void MsaTcpDispatcher::createRoom(User* tmpPeer) {
@@ -179,6 +249,7 @@ void MsaTcpDispatcher::enterRoom(User* tmpPeer) {
 			}
 	}
 }
+
 void MsaTcpDispatcher::exitRoom(User* tmpPeer) {
 	if(tmpPeer->roomName != "") {
 		Room* room = _Manager->roomNameToRoom.find(tmpPeer->roomName);
@@ -339,6 +410,22 @@ TCPSocket* MsaTcpDispatcher::selectSocketReceive()
 		return mtsl->listenToSocket(1);
 	}
 	return NULL;
+}
+
+void MsaTcpDispatcher::run()
+{
+	//loop
+	while(true)
+	{
+		//listen to all peers
+		TCPSocket* peer = this->selectSocketReceive();
+
+		if (peer != NULL)
+		{
+			//process ready peer
+			this->processReadyPeer(peer);
+		}
+	}
 }
 
 void MsaTcpDispatcher::addPeer(TCPSocket* peer)

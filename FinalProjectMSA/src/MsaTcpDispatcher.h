@@ -4,6 +4,8 @@
  *  Created on: Jan 8, 2016
  *      Author: user
  */
+#ifndef MSATCPDISPATCHER_H_
+#define MSATCPDISPATCHER_H_
 
 #include "MThread.h"
 #include <map>
@@ -11,18 +13,20 @@
 #include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string>
+#include <vector>
 #include "MultipleTCPSocketsListener.h"
 #include "TCPSocket.h"
-#include "MsaProtocol.h"
-#include <string>
+
+#include <stdio.h>
+#include <string.h>
+
 #include "sharedlib/User.h"
 #include "sharedlib/Room.h"
+#include "sharedlib/Session.h"
 
-#include "MultipleTCPSocketsListener.h"
-
-
-#ifndef MSATCPDISPATCHER_H_
-#define MSATCPDISPATCHER_H_
+#include "MsaManager.h"
+#include "MsaProtocol.h"
 
 class MsaTcpDispatcher  : public MThread{
 private:
@@ -54,6 +58,7 @@ public:
 	vector<User*> getConnectedUsers();
 	vector<User*> getAllUsers();
 	vector<Room*> getAllRooms();
+	vector<Session*> getAllSessions();
 	vector<User*> getAllUsersInRoom(string name);
 	string prepareToSendUsers(vector<User*> uUsers);
 	string prepareToSendRooms(vector<Room*> rRooms);
@@ -61,10 +66,6 @@ public:
 	// Get User
 	User* GetUser(TCPSocket* peer);
 	vector<string> getUsersFromFile();
-
-
-
-
 };
 
 #endif /* MSATCPDISPATCHER_H_ */

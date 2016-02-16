@@ -7,12 +7,12 @@
 
 #include "Session.h"
 
-Session::Session() {
-	// TODO Auto-generated constructor stub
+Session::Session(User* iFUser,User* iSUser) {
+	this->firstUser = iFUser;
+	this->secoundUser = iSUser;
 
 }
 
 Session::~Session() {
-	// TODO Auto-generated destructor stub
 }
 

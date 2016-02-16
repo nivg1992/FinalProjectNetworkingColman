@@ -4,12 +4,12 @@
  *  Created on: Jan 8, 2016
  *      Author: user
  */
+#ifndef MSATCPSERVER_H_
+#define MSATCPSERVER_H_
+
 #include "MThread.h"
 #include "TCPSocket.h"
 #include "MsaTcpDispatcher.h"
-
-#ifndef MSATCPSERVER_H_
-#define MSATCPSERVER_H_
 
 class MsaTcpServer  :  public MThread {
 private:

@@ -4,16 +4,15 @@
  *  Created on: Jan 8, 2016
  *      Author: user
  */
+#ifndef USER_H_
+#define USER_H_
 
 #include <string>
 #include "TCPSocket.h"
 
-
-#ifndef USER_H_
-#define USER_H_
-
 class User {
 public:
+	User(string iUserName);
 	User(string iUserName,string iPassword,TCPSocket* iSocket);
 	virtual ~User();
 	string username;
