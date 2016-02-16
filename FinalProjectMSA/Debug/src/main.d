@@ -1,9 +1,7 @@
-src/MsaManager.d: ../src/MsaManager.cpp ../src/MsaManager.h \
- ../src/sharedlib/User.h \
+src/main.d: ../src/main.cpp ../src/MsaManager.h ../src/sharedlib/User.h \
  /home/user/Desktop/FinalProject/FinalProjectMSA/msocketsLib/TCPSocket.h \
- ../src/sharedlib/Room.h ../src/sharedlib/../MsaUtility.h \
- ../src/sharedlib/../MsaProtocol.h ../src/sharedlib/User.h \
- ../src/sharedlib/Session.h
+ ../src/sharedlib/Room.h ../src/sharedlib/../MsaProtocol.h \
+ ../src/sharedlib/User.h ../src/sharedlib/Session.h
 
 ../src/MsaManager.h:
 
@@ -12,8 +10,6 @@ src/MsaManager.d: ../src/MsaManager.cpp ../src/MsaManager.h \
 /home/user/Desktop/FinalProject/FinalProjectMSA/msocketsLib/TCPSocket.h:
 
 ../src/sharedlib/Room.h:
-
-../src/sharedlib/../MsaUtility.h:
 
 ../src/sharedlib/../MsaProtocol.h:
 

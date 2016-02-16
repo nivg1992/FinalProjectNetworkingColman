@@ -24,6 +24,7 @@
 
 using namespace std;
 
+
 class MsaManager {
 	typedef map<string, User*> UserMap;
 	typedef map<string, Room*> RoomMap;
@@ -38,12 +39,6 @@ public:
 	void printAllRooms();
 	void printUsersByRoom(string roomName);
 	void close();
-
-	// read and write socket
-	static int readCommandFromPeer(TCPSocket* peer);
-	static string readDataFromPeer(TCPSocket* peer);
-	static void sendCommandToPeer(TCPSocket* peer, int command);
-	static void sendDataToPeer(TCPSocket* peer, string msg);
 
 	UserMap addressToUser;
 	UserMap usernameToUser;

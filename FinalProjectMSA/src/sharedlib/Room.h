@@ -9,19 +9,21 @@
 
 #include <vector>
 #include <string>
+#include "../MsaUtility.h"
 #include "../MsaProtocol.h"
-#include "../MsaManager.h"
+
 
 #include "User.h"
 
 class Room {
 private:
-	string roomName;
+
 
 public:
 	Room(string roomName,User* iroomOwner);
 	virtual ~Room();
 
+	string roomName;
 	vector<User*> arrUsers;
 	User* roomOwner;
 	void AddUserToRoom(User* uUser);

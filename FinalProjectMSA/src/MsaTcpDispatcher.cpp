@@ -10,6 +10,8 @@
 
 MsaTcpDispatcher::MsaTcpDispatcher(MsaManager* Manager) {
 	this->_Manager = Manager;
+
+	mtsl = new MultipleTCPSocketsListener();
 }
 
 MsaTcpDispatcher::~MsaTcpDispatcher() {
@@ -18,7 +20,7 @@ MsaTcpDispatcher::~MsaTcpDispatcher() {
 
 void MsaTcpDispatcher::processReadyPeer(TCPSocket* peer)
 {
-	int command = MsaManager::readCommandFromPeer(peer);
+	int command = MsaUtility::readCommandFromPeer(peer);
 	User* currUser = GetUser(peer);
 
 	switch (command) {
@@ -55,34 +57,34 @@ void MsaTcpDispatcher::processReadyPeer(TCPSocket* peer)
 			break;
 		case GET_CONNECTED_USERS:
 			if(currUser != NULL){
-				MsaManager::sendCommandToPeer(peer,PRINT_SERVER_DATA);
-				MsaManager::sendDataToPeer(peer,prepareToSendUsers(getConnectedUsers()));
+				MsaUtility::sendCommandToPeer(peer,PRINT_SERVER_DATA);
+				MsaUtility::sendDataToPeer(peer,prepareToSendUsers(getConnectedUsers()));
 			}
 			break;
 		case GET_ROOM_USERS:
 			if(currUser != NULL){
-				string roomNameFromClient = MsaManager::readDataFromPeer(peer);
+				string roomNameFromClient = string(MsaUtility::readDataFromPeer(peer));
 
-				vector<Room*> rooms = getAllUsersInRoom(roomNameFromClient);
+				vector<User*> Users = getAllUsersInRoom(roomNameFromClient);
 
-				if(rooms == NULL) {
-					MsaManager::sendCommandToPeer(peer,NO_ROOMS);
+				if(Users.size() == 0) {
+					MsaUtility::sendCommandToPeer(peer,NO_ROOMS);
 				} else {
-					MsaManager::sendCommandToPeer(peer,PRINT_SERVER_DATA);
-					MsaManager::sendDataToPeer(peer,prepareToSendRooms(rooms));
+					MsaUtility::sendCommandToPeer(peer,PRINT_SERVER_DATA);
+					MsaUtility::sendDataToPeer(peer,prepareToSendUsers(Users));
 				}
 			}
 			break;
 		case GET_ROOMS:
 			if(currUser != NULL){
-				MsaManager::sendCommandToPeer(peer,PRINT_SERVER_DATA);
-				MsaManager::sendDataToPeer(peer,prepareToSendRooms(getAllRooms()));
+				MsaUtility::sendCommandToPeer(peer,PRINT_SERVER_DATA);
+				MsaUtility::sendDataToPeer(peer,prepareToSendRooms(getAllRooms()));
 			}
 			break;
 		case GET_ALL_USERS:
 			if(currUser != NULL){
-				MsaManager::sendCommandToPeer(peer,PRINT_SERVER_DATA);
-				MsaManager::sendDataToPeer(peer,prepareToSendUsers(getAllUsers()));
+				MsaUtility::sendCommandToPeer(peer,PRINT_SERVER_DATA);
+				MsaUtility::sendDataToPeer(peer,prepareToSendUsers(getAllUsers()));
 			}
 			break;
 		case DISCONNECT:
@@ -97,7 +99,7 @@ void MsaTcpDispatcher::processReadyPeer(TCPSocket* peer)
 string MsaTcpDispatcher::prepareToSendRooms(vector<Room*> rRooms) {
 	string strRooms;
 
-	for(int i=0;i < rRooms.size();i++) {
+	for(unsigned int i=0;i < rRooms.size();i++) {
 		strRooms.append(rRooms.at(i)->roomName);
 		if(i!=rRooms.size()-1){
 			strRooms.append(" ");
@@ -109,7 +111,7 @@ string MsaTcpDispatcher::prepareToSendRooms(vector<Room*> rRooms) {
 string MsaTcpDispatcher::prepareToSendUsers(vector<User*> uUsers) {
 	string strUsers;
 
-	for(int i=0;i < uUsers.size();i++) {
+	for(unsigned int i=0;i < uUsers.size();i++) {
 		strUsers.append(uUsers.at(i)->username);
 		if(i!=uUsers.size()-1){
 			strUsers.append(" ");
@@ -133,13 +135,15 @@ vector<User*> MsaTcpDispatcher::getAllUsers(){
 	vector<string> usersVec = getUsersFromFile();
 	int numUsers = usersVec.size();
 	vector<User*> Users;
+	User* userFromFile;
+
 	for(int i = 0; i <numUsers;i++)
 	{
 		string currUser=usersVec.at(i);
 		// parse user name from file
 		currUser=currUser.substr(0, currUser.find("#"));
-		User* user = new User(currUser);
-		Users.push_back(user);
+		userFromFile = new User(currUser);
+		Users.push_back(userFromFile);
 	}
 
 	return Users;
@@ -160,56 +164,56 @@ vector<Room*> MsaTcpDispatcher::getAllRooms(){
 }
 
 vector<User*> MsaTcpDispatcher::getAllUsersInRoom(string name){
-	Room* room = _Manager->roomNameToRoom.find(name);
-	if(room != _Manager->roomNameToRoom.end()) {
-		return room->arrUsers;
+	if(_Manager->roomNameToRoom.find(name) != _Manager->roomNameToRoom.end()) {
+		return _Manager->roomNameToRoom[name]->arrUsers;
 	}
 	else {
-		return NULL;
+		vector<User*> emptyUsers;
+		return emptyUsers;
 	}
 }
 
 void MsaTcpDispatcher::openSession(User* tmpPeer) {
-	string secendUserName =  MsaManager::readDataFromPeer(tmpPeer->socket);
+	string secendUserName =  string(MsaUtility::readDataFromPeer(tmpPeer->socket));
 
-	User* secendUser = _Manager->usernameToUser.find(secendUserName);
-
-	if(secendUser != _Manager->usernameToUser.end()) {
+	if(_Manager->usernameToUser.find(secendUserName) != _Manager->usernameToUser.end()) {
+		User* secendUser = _Manager->usernameToUser[secendUserName];
 		if(secendUser->sessionWithUserName == "" && secendUser->roomName == "") {
-			MsaManager::sendCommandToPeer(secendUser->socket,OPEN_SESSION);
-			int state = MsaManager::readCommandFromPeer(secendUser->socket);
+			MsaUtility::sendCommandToPeer(secendUser->socket,OPEN_SESSION);
+			int state = MsaUtility::readCommandFromPeer(secendUser->socket);
 
 			if(state == FREE) {
-				MsaManager::sendCommandToPeer(tmpPeer->socket,SESSION_ACCEPTED);
-				MsaManager::sendDataToPeer(tmpPeer->socket,secendUser->username + " " + secendUser->socket->destIpAndPort());
+				MsaUtility::sendCommandToPeer(tmpPeer->socket,SESSION_ACCEPTED);
+				MsaUtility::sendDataToPeer(tmpPeer->socket,secendUser->username + " " + secendUser->socket->destIpAndPort());
 
-				MsaManager::sendCommandToPeer(secendUser->socket,SESSION_ACCEPTED);
-				MsaManager::sendDataToPeer(secendUser->socket,tmpPeer->username + " " + tmpPeer->socket->destIpAndPort());
+				MsaUtility::sendCommandToPeer(secendUser->socket,SESSION_ACCEPTED);
+				MsaUtility::sendDataToPeer(secendUser->socket,tmpPeer->username + " " + tmpPeer->socket->destIpAndPort());
 
 				Session* newSession = new Session(tmpPeer,secendUser);
 				_Manager->arrSessions.push_back(newSession);
 			} else {
-				MsaManager::sendCommandToPeer(tmpPeer->socket,SESSION_DENIED);
+				MsaUtility::sendCommandToPeer(tmpPeer->socket,SESSION_DENIED);
 			}
 		} else {
-			MsaManager::sendCommandToPeer(tmpPeer->socket,SESSION_DENIED);
+			MsaUtility::sendCommandToPeer(tmpPeer->socket,SESSION_DENIED);
 		}
 	}
 	else {
-		MsaManager::sendCommandToPeer(tmpPeer->socket,SESSION_DENIED);
+		MsaUtility::sendCommandToPeer(tmpPeer->socket,SESSION_DENIED);
 	}
 
 }
 
 void MsaTcpDispatcher::closeSession(User* tmpPeer) {
-	for(int i=0;i<_Manager->arrSessions.size();i++)
+	for(unsigned int i=0;i<_Manager->arrSessions.size();i++)
 	{
-		if(_Manager->arrSessions.at(i) == tmpPeer->socket->destIpAndPort())
+		if((_Manager->arrSessions.at(i)->firstUser->socket->destIpAndPort() == tmpPeer->socket->destIpAndPort()) ||
+		   _Manager->arrSessions.at(i)->secoundUser->socket->destIpAndPort() == tmpPeer->socket->destIpAndPort())
 		{
 			User* firstUser = _Manager->arrSessions.at(i)->firstUser;
 			User* secoundUser = _Manager->arrSessions.at(i)->secoundUser;
-			MsaManager::sendCommandToPeer(firstUser->socket,CLOSE_SESSION);
-			MsaManager::sendCommandToPeer(secoundUser->socket,CLOSE_SESSION);
+			MsaUtility::sendCommandToPeer(firstUser->socket,CLOSE_SESSION);
+			MsaUtility::sendCommandToPeer(secoundUser->socket,CLOSE_SESSION);
 			_Manager->arrSessions.erase(_Manager->arrSessions.begin()+i);
 			return;
 		}
@@ -218,51 +222,49 @@ void MsaTcpDispatcher::closeSession(User* tmpPeer) {
 
 void MsaTcpDispatcher::createRoom(User* tmpPeer) {
 	if(tmpPeer->roomName == "") {
-		string RequestRoomName =  MsaManager::readDataFromPeer(tmpPeer->socket);
-		Room* room = _Manager->roomNameToRoom.find(RequestRoomName);
+		string RequestRoomName =  string(MsaUtility::readDataFromPeer(tmpPeer->socket));
 
-		if(room == _Manager->roomNameToRoom.end()) {
-			Room* newRoom = new Room(RequestRoomName);
+		if(_Manager->roomNameToRoom.find(RequestRoomName) == _Manager->roomNameToRoom.end()) {
+			Room* newRoom = new Room(RequestRoomName, tmpPeer);
 			newRoom->arrUsers.push_back(tmpPeer);
-			newRoom->roomOwner = tmpPeer;
 			_Manager->roomNameToRoom.insert(pair<string,Room*>(RequestRoomName,newRoom));
 
-			MsaManager::sendCommandToPeer(tmpPeer->socket,ROOM_CREATED);
+			MsaUtility::sendCommandToPeer(tmpPeer->socket,ROOM_CREATED);
 		} else {
-			MsaManager::sendCommandToPeer(tmpPeer->socket,ROOM_EXISTS);
+			MsaUtility::sendCommandToPeer(tmpPeer->socket,ROOM_EXISTS);
 		}
 	}
 }
 
 void MsaTcpDispatcher::enterRoom(User* tmpPeer) {
 	if(tmpPeer->roomName == "") {
-			string RequestRoomName =  MsaManager::readDataFromPeer(tmpPeer->socket);
-			Room* room = _Manager->roomNameToRoom.find(RequestRoomName);
-			if(room != _Manager->roomNameToRoom.end()) {
-				MsaManager::sendCommandToPeer(tmpPeer->socket,JOIN_ROOM_SUCCESSFUL);
-				MsaManager::sendDataToPeer(tmpPeer->socket,room->roomName);
+			string RequestRoomName =  string(MsaUtility::readDataFromPeer(tmpPeer->socket));
+			if(_Manager->roomNameToRoom.find(RequestRoomName) != _Manager->roomNameToRoom.end()) {
+				Room* room = _Manager->roomNameToRoom[RequestRoomName];
+				MsaUtility::sendCommandToPeer(tmpPeer->socket,JOIN_ROOM_SUCCESSFUL);
+				MsaUtility::sendDataToPeer(tmpPeer->socket,room->roomName);
 
 				room->arrUsers.push_back(tmpPeer);
 				room->UpdateRoomUsers(tmpPeer,JOIN_ROOM);
 			} else {
-				MsaManager::sendCommandToPeer(tmpPeer->socket,NO_SUCH_ROOM);
+				MsaUtility::sendCommandToPeer(tmpPeer->socket,NO_SUCH_ROOM);
 			}
 	}
 }
 
 void MsaTcpDispatcher::exitRoom(User* tmpPeer) {
 	if(tmpPeer->roomName != "") {
-		Room* room = _Manager->roomNameToRoom.find(tmpPeer->roomName);
+		Room* room = _Manager->roomNameToRoom[tmpPeer->roomName];
 		if(room->roomOwner->username == tmpPeer->username) {
 			_Manager->roomNameToRoom.erase(tmpPeer->roomName);
 		} else {
-			for(int i=0;i<room->arrUsers.size();i++)
+			for(unsigned int i=0;i<room->arrUsers.size();i++)
 			{
-				if(room->arrUsers.at(i) == tmpPeer->socket->destIpAndPort())
+				if(room->arrUsers.at(i)->socket->destIpAndPort() == tmpPeer->socket->destIpAndPort())
 				{
 					room->arrUsers.erase(room->arrUsers.begin() + i);
 					room->UpdateRoomUsers(tmpPeer,LEAVE_ROOM);
-					MsaManager::sendCommandToPeer(tmpPeer->socket,EXIT_ROOM);
+					MsaUtility::sendCommandToPeer(tmpPeer->socket,EXIT_ROOM);
 					return;
 				}
 			}
@@ -294,7 +296,7 @@ vector<string> MsaTcpDispatcher::getUsersFromFile(){
 bool MsaTcpDispatcher::registerUser(TCPSocket* tmpPeer)
 {
 
-	char* buffer = MsaManager::readDataFromPeer(tmpPeer);
+	char* buffer = MsaUtility::readDataFromPeer(tmpPeer);
 
 	// get user and password
 	string userName = strtok(buffer," ");
@@ -313,7 +315,7 @@ bool MsaTcpDispatcher::registerUser(TCPSocket* tmpPeer)
 			// validate user and password
 			if (userName==currUser && password==currPass)
 			{
-				MsaManager::sendCommandToPeer(newUser->socket,REGISTRATION_FAILED);
+				MsaUtility::sendCommandToPeer(newUser->socket,REGISTRATION_FAILED);
 				return false;
 			}
 	}
@@ -329,7 +331,7 @@ bool MsaTcpDispatcher::registerUser(TCPSocket* tmpPeer)
 
 	//free(tmpUserAndPass);
 	connect(newUser);
-	MsaManager::sendCommandToPeer(newUser->socket,REGISTRATION_SUCCESSFUL);
+	MsaUtility::sendCommandToPeer(newUser->socket,REGISTRATION_SUCCESSFUL);
 	cout<<userName<<" has been registerd"<<endl;
 
 	return true;
@@ -340,11 +342,9 @@ void MsaTcpDispatcher::login(TCPSocket* tmpPeer)
 {
 	//get user name and password
 	cout<<"in login"<<endl;
-	char* buffer = MsaManager::readDataFromPeer(tmpPeer);
+	char* buffer = MsaUtility::readDataFromPeer(tmpPeer);
 	string userName = strtok(buffer," ");
 	string password = strtok(NULL," ");
-
-	bool auth=false;
 
 	vector<string> usersVec = getUsersFromFile();
 
@@ -369,7 +369,7 @@ void MsaTcpDispatcher::login(TCPSocket* tmpPeer)
 
 	}
 
-	MsaManager::sendCommandToPeer(tmpPeer, LOGIN_ERROR);
+	MsaUtility::sendCommandToPeer(tmpPeer, LOGIN_ERROR);
 }
 
 void MsaTcpDispatcher::connect(User* tmpUser)
@@ -380,12 +380,12 @@ void MsaTcpDispatcher::connect(User* tmpUser)
 		tmpUser->isLoggedIn = true;
 		this->_Manager->addressToUser.insert(pair<string,User*>(tmpUser->socket->destIpAndPort(),tmpUser));
 		this->_Manager->usernameToUser.insert(pair<string,User*>(tmpUser->username,tmpUser));
-		MsaManager::sendCommandToPeer(tmpUser->socket,LOGIN_ACCEPTED);
-		MsaManager::sendDataToPeer(tmpUser->socket,tmpUser->socket->destIpAndPort());
+		MsaUtility::sendCommandToPeer(tmpUser->socket,LOGIN_ACCEPTED);
+		MsaUtility::sendDataToPeer(tmpUser->socket,tmpUser->socket->destIpAndPort());
 	}
 	else
 	{
-		MsaManager::sendCommandToPeer(tmpUser->socket,LOGIN_ERROR);
+		MsaUtility::sendCommandToPeer(tmpUser->socket,LOGIN_ERROR);
 	}
 }
 

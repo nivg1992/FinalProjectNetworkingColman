@@ -49,7 +49,7 @@ string Room::userToString() {
 
 void Room::UpdateRoomUsers(User* updateUser,int Command) {
 	for(unsigned int i=0;i < arrUsers.size();i++) {
-		MsaManager::sendCommandToPeer(arrUsers.at(i)->socket,ROOM_UPDATED);
+		MsaUtility::sendCommandToPeer(arrUsers.at(i)->socket,ROOM_UPDATED);
 
 		string tempMsg = updateUser->username;
 		tempMsg.append(" Has Joined the room");
@@ -72,13 +72,13 @@ void Room::UpdateRoomUsers(User* updateUser,int Command) {
 				}
 		}
 
-		MsaManager::sendDataToPeer(arrUsers.at(i)->socket, tempMsg);
+		MsaUtility::sendDataToPeer(arrUsers.at(i)->socket, tempMsg);
 
 		int numOfUsers = countUsersInRoom();
 
-		MsaManager::sendCommandToPeer(arrUsers.at(i)->socket, numOfUsers);
+		MsaUtility::sendCommandToPeer(arrUsers.at(i)->socket, numOfUsers);
 
 		string usersVectorString = this->userToString();
-		MsaManager::sendDataToPeer(arrUsers.at(i)->socket, usersVectorString);
+		MsaUtility::sendDataToPeer(arrUsers.at(i)->socket, usersVectorString);
 	}
 }

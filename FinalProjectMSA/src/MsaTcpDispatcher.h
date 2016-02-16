@@ -28,9 +28,11 @@
 #include "MsaManager.h"
 #include "MsaProtocol.h"
 
+using namespace std;
+
 class MsaTcpDispatcher  : public MThread{
 private:
-	MultipleTCPSocketsListener* mtsl = new MultipleTCPSocketsListener();
+	MultipleTCPSocketsListener* mtsl;
 	void processReadyPeer(TCPSocket* peer);
 	MsaManager* _Manager;
 
