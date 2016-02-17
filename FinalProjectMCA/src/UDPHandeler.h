@@ -13,6 +13,8 @@
 #include <vector>
 #include <stdlib.h>
 
+class UDPSocket;
+
 class UDPHandeler:public MThread {
 
 public:
