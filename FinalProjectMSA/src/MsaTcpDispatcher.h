@@ -20,6 +20,7 @@
 #include "TCPSocket.h"
 
 #include <stdio.h>
+#include <cstring>
 #include <string.h>
 
 #include "sharedlib/User.h"
@@ -50,8 +51,8 @@ public:
 	void run();
 
 	// Login and register
-	void login(TCPSocket* uUser);
-	bool registerUser(TCPSocket* tmpPeer);
+	void login(User* uUser);
+	bool registerUser(User* tmpPeer);
 	void connect(User* tmpPeer);
 
 	// Session
@@ -70,6 +71,7 @@ public:
 	vector<User*> getAllUsersInRoom(string name);
 	string prepareToSendUsers(vector<User*> uUsers);
 	string prepareToSendRooms(vector<Room*> rRooms);
+	vector<TCPSocket*> getPeersVector(map<string,User*> users);
 
 	// Get User
 	User* GetUser(TCPSocket* peer);

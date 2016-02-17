@@ -7,6 +7,8 @@
 
 #include "MsaTcpDispatcher.h"
 #include <cstring>
+#include <string.h>
+#include <stdio.h>
 
 MsaTcpDispatcher::MsaTcpDispatcher(MsaManager* Manager) {
 	this->_Manager = Manager;
@@ -25,10 +27,18 @@ void MsaTcpDispatcher::processReadyPeer(TCPSocket* peer)
 
 	switch (command) {
 		case LOGIN_REQUEST:
-			login(peer);
+			if(this->_Manager->addressToUser.find(peer->destIpAndPort()) != this->_Manager->addressToUser.end()) {
+					User* currUserLogin = this->_Manager->addressToUser[peer->destIpAndPort()];
+					login(currUserLogin);
+			}
+
 			break;
 		case REGISTER_USER:
-			registerUser(peer);
+			if(this->_Manager->addressToUser.find(peer->destIpAndPort()) != this->_Manager->addressToUser.end()) {
+					User* currUserRegister = this->_Manager->addressToUser[peer->destIpAndPort()];
+					registerUser(currUserRegister);
+			}
+
 			break;
 		case OPEN_SESSION:
 			if(currUser != NULL){
@@ -294,16 +304,18 @@ vector<string> MsaTcpDispatcher::getUsersFromFile(){
 
 	}
 
-bool MsaTcpDispatcher::registerUser(TCPSocket* tmpPeer)
+bool MsaTcpDispatcher::registerUser(User* tmpPeer)
 {
 
-	char* buffer = MsaUtility::readDataFromPeer(tmpPeer);
+	char* buffer = MsaUtility::readDataFromPeer(tmpPeer->socket);
 
 	// get user and password
-	string userName = strtok(buffer," ");
-	string password = strtok(NULL, " ");
-	User* newUser = new User(userName,password,tmpPeer);
+	char* userName = strtok(buffer," ");
+	char* password = strtok(NULL, " ");
+
 	vector<string> usersVec = getUsersFromFile();
+
+
 
 	// check is user already exists
 	for(unsigned int i=0;i<usersVec.size();i++)
@@ -316,10 +328,15 @@ bool MsaTcpDispatcher::registerUser(TCPSocket* tmpPeer)
 			// validate user and password
 			if (userName==currUser && password==currPass)
 			{
-				MsaUtility::sendCommandToPeer(newUser->socket,REGISTRATION_FAILED);
+				MsaUtility::sendCommandToPeer(tmpPeer->socket,REGISTRATION_FAILED);
 				return false;
 			}
+
+
 	}
+
+	tmpPeer->username = userName;
+	tmpPeer->password = password;
 
 	// open file for writing
 	ofstream pin2;
@@ -331,19 +348,19 @@ bool MsaTcpDispatcher::registerUser(TCPSocket* tmpPeer)
 
 
 	//free(tmpUserAndPass);
-	connect(newUser);
-	MsaUtility::sendCommandToPeer(newUser->socket,REGISTRATION_SUCCESSFUL);
+	connect(tmpPeer);
+	MsaUtility::sendCommandToPeer(tmpPeer->socket,REGISTRATION_SUCCESSFUL);
 	cout<<userName<<" has been registerd"<<endl;
 
 	return true;
 
 }
 
-void MsaTcpDispatcher::login(TCPSocket* tmpPeer)
+void MsaTcpDispatcher::login(User* tmpPeer)
 {
 	//get user name and password
 	cout<<"in login"<<endl;
-	char* buffer = MsaUtility::readDataFromPeer(tmpPeer);
+	char* buffer = MsaUtility::readDataFromPeer(tmpPeer->socket);
 	string userName = strtok(buffer," ");
 	string password = strtok(NULL," ");
 
@@ -361,16 +378,16 @@ void MsaTcpDispatcher::login(TCPSocket* tmpPeer)
 		// validate user and password
 		if (userName==currUser && password==currPass)
 		{
-			User* LoginUser = new User(userName,password,tmpPeer);
-
-			connect(LoginUser);
+			tmpPeer->username = userName;
+			tmpPeer->password = password;
+			connect(tmpPeer);
 
 			return;
 		}
 
 	}
 
-	MsaUtility::sendCommandToPeer(tmpPeer, LOGIN_ERROR);
+	MsaUtility::sendCommandToPeer(tmpPeer->socket, LOGIN_ERROR);
 }
 
 void MsaTcpDispatcher::connect(User* tmpUser)
@@ -379,7 +396,7 @@ void MsaTcpDispatcher::connect(User* tmpUser)
 	{
 		cout<<"user "<< tmpUser->username <<" connected successfully to server"<<endl;
 		tmpUser->isLoggedIn = true;
-		this->_Manager->addressToUser.insert(pair<string,User*>(tmpUser->socket->destIpAndPort(),tmpUser));
+		//this->_Manager->addressToUser.insert(pair<string,User*>(tmpUser->socket->destIpAndPort(),tmpUser));
 		this->_Manager->usernameToUser.insert(pair<string,User*>(tmpUser->username,tmpUser));
 		MsaUtility::sendCommandToPeer(tmpUser->socket,LOGIN_ACCEPTED);
 		MsaUtility::sendDataToPeer(tmpUser->socket,tmpUser->socket->destIpAndPort());
@@ -404,13 +421,14 @@ User* MsaTcpDispatcher::GetUser(TCPSocket* peer) {
 	}
 }
 
+
+
 TCPSocket* MsaTcpDispatcher::selectSocketReceive()
 {
-	if (this->_Manager->addressToUser.size() > 0)
-	{
-		return mtsl->listenToSocket(1);
-	}
-	return NULL;
+	mtsl = new MultipleTCPSocketsListener();
+	mtsl->addSockets(this->_Manager->getPeersVector());
+
+	return mtsl->listenToSocket(2);
 }
 
 void MsaTcpDispatcher::run()
@@ -431,7 +449,8 @@ void MsaTcpDispatcher::run()
 
 void MsaTcpDispatcher::addPeer(TCPSocket* peer)
 {
-	mtsl->addSocket(peer);
+	User* newUser = new User(peer);
+	this->_Manager->addressToUser.insert(pair<string,User*>(newUser->socket->destIpAndPort(),newUser));
 }
 
 

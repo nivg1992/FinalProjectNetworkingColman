@@ -15,9 +15,9 @@ User::User(string iUserName) {
 
 }
 
-User::User(string iUserName,string iPassword,TCPSocket* iSocket) {
-	this->username = iUserName;
-	this->password = iPassword;
+User::User(TCPSocket* iSocket) {
+	this->username = "";
+	this->password = "";
 	this->socket = iSocket;
 	isLoggedIn = false;
 

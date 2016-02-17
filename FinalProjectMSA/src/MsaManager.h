@@ -49,6 +49,7 @@ public:
 	void printAllRooms();
 	void printUsersByRoom(string roomName);
 	void close();
+	vector<TCPSocket*> getPeersVector();
 
 	UserMap addressToUser;
 	UserMap usernameToUser;

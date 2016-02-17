@@ -22,7 +22,7 @@ struct MsaUtility {
 
 		int DataLen = ntohl(buffer);
 
-		char bufferData[DataLen];
+		char* bufferData = new char[DataLen + 1];
 		memset((void*)bufferData,0,DataLen);
 		peer->recv(bufferData,DataLen);
 		return bufferData;

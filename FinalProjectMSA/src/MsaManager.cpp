@@ -18,6 +18,16 @@ MsaManager::~MsaManager() {
 
 }
 
+vector<TCPSocket*> MsaManager::getPeersVector() {
+	vector<TCPSocket*> PeersVector;
+
+	for (std::map<string,User*>::iterator it = this->addressToUser.begin();it != this->addressToUser.end();it++) {
+		PeersVector.push_back(it->second->socket);
+	}
+
+	return PeersVector;
+}
+
 void MsaManager::printAllConnetedUsers() {
 	vector<User*> connectedUsers = dispatcher->getConnectedUsers();
 	if(connectedUsers.size() == 0)

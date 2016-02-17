@@ -13,7 +13,7 @@
 class User {
 public:
 	User(string iUserName);
-	User(string iUserName,string iPassword,TCPSocket* iSocket);
+	User(TCPSocket* iSocket);
 	virtual ~User();
 	string username;
 	string password;
