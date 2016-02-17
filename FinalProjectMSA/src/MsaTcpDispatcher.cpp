@@ -425,6 +425,7 @@ User* MsaTcpDispatcher::GetUser(TCPSocket* peer) {
 
 TCPSocket* MsaTcpDispatcher::selectSocketReceive()
 {
+	delete mtsl;
 	mtsl = new MultipleTCPSocketsListener();
 	mtsl->addSockets(this->_Manager->getPeersVector());
 

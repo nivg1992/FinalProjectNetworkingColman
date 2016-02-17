@@ -9,6 +9,7 @@
 
 MsaTcpServer::MsaTcpServer(int port, MsaTcpDispatcher* dispatcher) {
 	_serverSock = new TCPSocket(port);
+	int i  = _serverSock->getSocketFid();
 	_dispatcher = dispatcher;
 
 
