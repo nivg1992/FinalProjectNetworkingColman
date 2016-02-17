@@ -59,14 +59,14 @@ void Room::UpdateRoomUsers(User* updateUser,int Command) {
 			case JOIN_ROOM:
 				{
 
-					string tempMsg = updateUser->username;
+					tempMsg = updateUser->username;
 					tempMsg.append(" Has Joined the room");
 
 					break;
 				}
 			case LEAVE_ROOM:
 				{
-					string tempMsg = updateUser->username;
+					tempMsg = updateUser->username;
 					tempMsg.append(" Has Left the room");
 					break;
 				}

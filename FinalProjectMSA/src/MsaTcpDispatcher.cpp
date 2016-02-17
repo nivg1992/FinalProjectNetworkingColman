@@ -225,6 +225,7 @@ void MsaTcpDispatcher::openSession(User* tmpPeer) {
 		User* secendUser = _Manager->usernameToUser[secendUserName];
 		if(secendUser->sessionWithUserName == "" && secendUser->roomName == "") {
 			MsaUtility::sendCommandToPeer(secendUser->socket,OPEN_SESSION);
+			sleep(1);
 			int state = MsaUtility::readCommandFromPeer(secendUser->socket);
 
 			if(state == FREE) {
@@ -308,7 +309,7 @@ void MsaTcpDispatcher::exitRoom(User* tmpPeer) {
 				room->arrUsers.at(i)->roomName = "";
 			}
 			room->UpdateRoomUsers(tmpPeer,LEAVE_ROOM);
-			_Manager->roomNameToRoom.erase(tmpPeer->roomName);
+			_Manager->roomNameToRoom.erase(room->roomName);
 		} else {
 			for(unsigned int i=0;i<room->arrUsers.size();i++)
 			{

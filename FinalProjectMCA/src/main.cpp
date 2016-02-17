@@ -22,6 +22,7 @@ void printInstructions(){
 	cout<<"lg <user> <password> - login with the user and password"<<endl;
 	cout<<"rg <user> <password> - register the new user with the given password and login the user."<<endl;
 	cout<<"o <username> - open a session with the user"<<endl;
+	cout<<"cr <room name> - create a chat room"<<endl;
 	cout<<"or <room name> - enter a chat room"<<endl;
 	cout<<"s <message> - send a message"<<endl;
 	cout<<"l - print the current status of the client "<<endl;
