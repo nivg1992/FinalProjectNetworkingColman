@@ -19,8 +19,8 @@ void printInstructions(){
 	cout<<"lcu - print the connected users list"<<endl;
 	cout<<"lr - print all rooms"<<endl;
 	cout<<"lru <room name> - print all users in this room"<<endl;
-	cout<<"login <user> <password> - login with the user and password"<<endl;
-	cout<<"register <user> <password> - register the new user with the given password and login the user."<<endl;
+	cout<<"lg <user> <password> - login with the user and password"<<endl;
+	cout<<"rg <user> <password> - register the new user with the given password and login the user."<<endl;
 	cout<<"o <username> - open a session with the user"<<endl;
 	cout<<"or <room name> - enter a chat room"<<endl;
 	cout<<"s <message> - send a message"<<endl;
@@ -47,7 +47,7 @@ int main(){
 			cin >> ip;
 			Client->connect(ip);
 		}
-		else if(command == "login")
+		else if(command == "lg")
 		{
 			string user, password;
 			cin >> user;
