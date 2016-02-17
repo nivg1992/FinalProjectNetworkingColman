@@ -43,11 +43,15 @@ void MsaTcpDispatcher::processReadyPeer(TCPSocket* peer)
 		case OPEN_SESSION:
 			if(currUser != NULL){
 				openSession(currUser);
+			} else {
+				MsaUtility::sendCommandToPeer(peer,NOT_CONNECTED);
 			}
 			break;
 		case CLOSE_SESSION:
 			if(currUser != NULL){
 				closeSession(currUser);
+			} else {
+				MsaUtility::sendCommandToPeer(peer,NOT_CONNECTED);
 			}
 			break;
 		case JOIN_ROOM:
@@ -58,17 +62,25 @@ void MsaTcpDispatcher::processReadyPeer(TCPSocket* peer)
 		case CREATE_ROOM:
 			if(currUser != NULL){
 				createRoom(currUser);
+			} else {
+				MsaUtility::sendCommandToPeer(peer,NOT_CONNECTED);
 			}
 			break;
 		case LEAVE_ROOM:
 			if(currUser != NULL){
 				exitRoom(currUser);
+			} else {
+				MsaUtility::sendCommandToPeer(peer,NOT_CONNECTED);
 			}
 			break;
 		case GET_CONNECTED_USERS:
 			if(currUser != NULL){
 				MsaUtility::sendCommandToPeer(peer,PRINT_SERVER_DATA);
-				MsaUtility::sendDataToPeer(peer,prepareToSendUsers(getConnectedUsers()));
+				vector<User*> Users = getConnectedUsers();
+				MsaUtility::sendCommandToPeer(peer,Users.size());
+				MsaUtility::sendDataToPeer(peer,prepareToSendUsers(Users));
+			} else {
+				MsaUtility::sendCommandToPeer(peer,NOT_CONNECTED);
 			}
 			break;
 		case GET_ROOM_USERS:
@@ -81,28 +93,47 @@ void MsaTcpDispatcher::processReadyPeer(TCPSocket* peer)
 					MsaUtility::sendCommandToPeer(peer,NO_ROOMS);
 				} else {
 					MsaUtility::sendCommandToPeer(peer,PRINT_SERVER_DATA);
+					MsaUtility::sendCommandToPeer(peer,Users.size());
 					MsaUtility::sendDataToPeer(peer,prepareToSendUsers(Users));
 				}
+			} else {
+				MsaUtility::sendCommandToPeer(peer,NOT_CONNECTED);
 			}
 			break;
 		case GET_ROOMS:
 			if(currUser != NULL){
-				MsaUtility::sendCommandToPeer(peer,PRINT_SERVER_DATA);
-				MsaUtility::sendDataToPeer(peer,prepareToSendRooms(getAllRooms()));
+
+				vector<Room*> rooms = getAllRooms();
+				if(rooms.size() == 0) {
+					MsaUtility::sendCommandToPeer(peer,NO_ROOMS);
+				} else {
+					MsaUtility::sendCommandToPeer(peer,PRINT_SERVER_DATA);
+					MsaUtility::sendCommandToPeer(peer,rooms.size());
+					MsaUtility::sendDataToPeer(peer,prepareToSendRooms(rooms));
+				}
+
+			} else {
+				MsaUtility::sendCommandToPeer(peer,NOT_CONNECTED);
 			}
 			break;
 		case GET_ALL_USERS:
 			if(currUser != NULL){
 				MsaUtility::sendCommandToPeer(peer,PRINT_SERVER_DATA);
-				MsaUtility::sendDataToPeer(peer,prepareToSendUsers(getAllUsers()));
+				vector<User*> users = getAllUsers();
+				MsaUtility::sendCommandToPeer(peer,users.size());
+				MsaUtility::sendDataToPeer(peer,prepareToSendUsers(users));
+			} else {
+				MsaUtility::sendCommandToPeer(peer,NOT_CONNECTED);
 			}
 			break;
 		case DISCONNECT:
-			if(currUser->roomName != "") {
-				_Manager->roomNameToRoom.erase(currUser->roomName);
+			if(currUser != NULL){
+				if(currUser->roomName != "") {
+					_Manager->roomNameToRoom.erase(currUser->roomName);
+				}
+				this->_Manager->usernameToUser.erase(currUser->username);
+				this->_Manager->addressToUser.erase(currUser->socket->destIpAndPort());
 			}
-			this->_Manager->usernameToUser.erase(currUser->username);
-			this->_Manager->addressToUser.erase(currUser->socket->destIpAndPort());
 
 			break;
 		default:
@@ -202,7 +233,8 @@ void MsaTcpDispatcher::openSession(User* tmpPeer) {
 
 				MsaUtility::sendCommandToPeer(secendUser->socket,SESSION_ACCEPTED);
 				MsaUtility::sendDataToPeer(secendUser->socket,tmpPeer->username + " " + tmpPeer->socket->destIpAndPort());
-
+				tmpPeer->sessionWithUserName = secendUser->username;
+				secendUser->sessionWithUserName = tmpPeer->username;
 				Session* newSession = new Session(tmpPeer,secendUser);
 				_Manager->arrSessions.push_back(newSession);
 			} else {
@@ -226,6 +258,8 @@ void MsaTcpDispatcher::closeSession(User* tmpPeer) {
 		{
 			User* firstUser = _Manager->arrSessions.at(i)->firstUser;
 			User* secoundUser = _Manager->arrSessions.at(i)->secoundUser;
+			firstUser->sessionWithUserName = "";
+			secoundUser->sessionWithUserName = "";
 			MsaUtility::sendCommandToPeer(firstUser->socket,CLOSE_SESSION);
 			MsaUtility::sendCommandToPeer(secoundUser->socket,CLOSE_SESSION);
 			_Manager->arrSessions.erase(_Manager->arrSessions.begin()+i);
@@ -242,7 +276,7 @@ void MsaTcpDispatcher::createRoom(User* tmpPeer) {
 			Room* newRoom = new Room(RequestRoomName, tmpPeer);
 			newRoom->arrUsers.push_back(tmpPeer);
 			_Manager->roomNameToRoom.insert(pair<string,Room*>(RequestRoomName,newRoom));
-
+			tmpPeer->roomName = RequestRoomName;
 			MsaUtility::sendCommandToPeer(tmpPeer->socket,ROOM_CREATED);
 		} else {
 			MsaUtility::sendCommandToPeer(tmpPeer->socket,ROOM_EXISTS);
@@ -252,12 +286,12 @@ void MsaTcpDispatcher::createRoom(User* tmpPeer) {
 
 void MsaTcpDispatcher::enterRoom(User* tmpPeer) {
 	if(tmpPeer->roomName == "") {
-			string RequestRoomName =  string(MsaUtility::readDataFromPeer(tmpPeer->socket));
+			string RequestRoomName =  MsaUtility::readDataFromPeer(tmpPeer->socket);
 			if(_Manager->roomNameToRoom.find(RequestRoomName) != _Manager->roomNameToRoom.end()) {
 				Room* room = _Manager->roomNameToRoom[RequestRoomName];
 				MsaUtility::sendCommandToPeer(tmpPeer->socket,JOIN_ROOM_SUCCESSFUL);
 				MsaUtility::sendDataToPeer(tmpPeer->socket,room->roomName);
-
+				tmpPeer->roomName = RequestRoomName;
 				room->arrUsers.push_back(tmpPeer);
 				room->UpdateRoomUsers(tmpPeer,JOIN_ROOM);
 			} else {
@@ -270,6 +304,10 @@ void MsaTcpDispatcher::exitRoom(User* tmpPeer) {
 	if(tmpPeer->roomName != "") {
 		Room* room = _Manager->roomNameToRoom[tmpPeer->roomName];
 		if(room->roomOwner->username == tmpPeer->username) {
+			for(unsigned int i=0;i<room->arrUsers.size();i++) {
+				room->arrUsers.at(i)->roomName = "";
+			}
+			room->UpdateRoomUsers(tmpPeer,LEAVE_ROOM);
 			_Manager->roomNameToRoom.erase(tmpPeer->roomName);
 		} else {
 			for(unsigned int i=0;i<room->arrUsers.size();i++)
@@ -279,6 +317,7 @@ void MsaTcpDispatcher::exitRoom(User* tmpPeer) {
 					room->arrUsers.erase(room->arrUsers.begin() + i);
 					room->UpdateRoomUsers(tmpPeer,LEAVE_ROOM);
 					MsaUtility::sendCommandToPeer(tmpPeer->socket,EXIT_ROOM);
+					tmpPeer->roomName = "";
 					return;
 				}
 			}
